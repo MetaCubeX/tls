@@ -8,7 +8,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/fips140"
-	"crypto/internal/boring"
 	"crypto/internal/cryptotest"
 	"crypto/mldsa"
 	"crypto/rand"
@@ -132,8 +131,7 @@ func isFIPSCipherSuite(id uint16) bool {
 		return true
 	case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 		TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
-		// Only for the native module.
-		return !boring.Enabled
+		return true
 	}
 	switch {
 	case strings.Contains(name, "CHACHA20"):
@@ -152,8 +150,7 @@ func isFIPSCurve(id CurveID) bool {
 	case CurveP256, CurveP384, CurveP521:
 		return true
 	case X25519MLKEM768, SecP256r1MLKEM768, SecP384r1MLKEM1024, MLKEM1024:
-		// Only for the native module.
-		return !boring.Enabled
+		return true
 	case X25519:
 		return false
 	default:
@@ -183,8 +180,7 @@ func isFIPSSignatureScheme(alg SignatureScheme) bool {
 		PSSWithSHA512:
 		return true
 	case Ed25519, MLDSA44, MLDSA65, MLDSA87:
-		// Only for the native module.
-		return !boring.Enabled
+		return true
 	case PKCS1WithSHA1, ECDSAWithSHA1:
 		return false
 	default:
@@ -408,11 +404,7 @@ func TestFIPSCertAlgs(t *testing.T) {
 	L2_I := fipsCert(t, "L2_I", fipsRSAKey(t, 1024), I_R1, fipsCertLeaf)
 	var L3_I *fipsCertificate
 	if fips140.Version() != "v1.0.0" {
-		// ML-DSA is not implemented by the Go+BoringCrypto FIPS 140 module.
 		mldsaFlags := fipsCertLeaf | fipsCertFIPSOK
-		if boring.Enabled {
-			mldsaFlags = fipsCertLeaf
-		}
 		L3_I = fipsCert(t, "L3_I", fipsMLDSAKey(t, mldsa.MLDSA44()), I_R1, mldsaFlags)
 	}
 

@@ -2,15 +2,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//go:build !boringcrypto
-
 package tls
 
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
-	"crypto/internal/boring"
 	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
@@ -79,8 +76,7 @@ func isCertificateAllowedFIPS(c *x509.Certificate) bool {
 	case ed25519.PublicKey:
 		return true
 	case *mldsa.PublicKey:
-		// Only for the native module.
-		return !boring.Enabled
+		return true
 	default:
 		return false
 	}

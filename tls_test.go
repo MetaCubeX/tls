@@ -12,7 +12,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/fips140"
-	"crypto/internal/boring"
 	"crypto/internal/cryptotest"
 	"crypto/mldsa"
 	"crypto/rand"
@@ -2025,9 +2024,6 @@ func testVerifyCertificates(t *testing.T, version uint16) {
 }
 
 func TestHandshakeMLKEM(t *testing.T) {
-	if boring.Enabled && fips140tls.Required() {
-		t.Skip("ML-KEM not supported in BoringCrypto FIPS mode")
-	}
 	defaultWithPQ := []CurveID{X25519MLKEM768, SecP256r1MLKEM768, SecP384r1MLKEM1024,
 		X25519, CurveP256, CurveP384, CurveP521}
 	defaultWithoutPQ := []CurveID{X25519, CurveP256, CurveP384, CurveP521}

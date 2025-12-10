@@ -8,12 +8,10 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"crypto/internal/boring"
 	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
-	"internal/testenv"
 	"io"
 	"net"
 	"os"
@@ -55,14 +53,6 @@ var (
 
 func runTestAndUpdateIfNeeded(t *testing.T, name string, run func(t *testing.T, update bool)) {
 	skipFIPS(t) // FIPS 140-3 mode changes the advertised parameters.
-
-	// Go+BoringCrypto's boring.RandReader ignores the testing override set by
-	// cryptotest.SetGlobalRandom, so e.g. ECDH key generation would be
-	// non-deterministic. Setting cryptocustomrand=1 makes rand.CustomReader
-	// pass the caller's reader (the testing source) through instead.
-	if boring.Enabled {
-		testenv.SetGODEBUG(t, "cryptocustomrand=1")
-	}
 
 	success := t.Run(name, func(t *testing.T) {
 		cryptotest.SetGlobalRandom(t, 0)
