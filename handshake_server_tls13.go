@@ -12,10 +12,10 @@ import (
 	"crypto/hmac"
 	"crypto/hpke"
 	"crypto/rsa"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"hash"
-	"internal/byteorder"
 	"io"
 	"slices"
 	"sort"
@@ -994,7 +994,7 @@ func (c *Conn) sendSessionTicket(earlyData bool, extra [][]byte) error {
 	if _, err := c.config.rand().Read(ageAdd); err != nil {
 		return err
 	}
-	m.ageAdd = byteorder.LEUint32(ageAdd)
+	m.ageAdd = binary.LittleEndian.Uint32(ageAdd)
 
 	if earlyData {
 		// RFC 9001, Section 4.6.1
