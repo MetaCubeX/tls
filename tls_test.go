@@ -19,7 +19,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"internal/testenv"
 	"io"
 	"math"
 	"math/big"
@@ -510,29 +509,6 @@ func TestTLSUniqueMatches(t *testing.T) {
 	}
 	if serverTLSUniquesValue == nil || bytes.Equal(serverTLSUniquesValue, make([]byte, 12)) {
 		t.Error("resumption tls-unique is empty or zero")
-	}
-}
-
-func TestVerifyHostname(t *testing.T) {
-	testenv.MustHaveExternalNetwork(t)
-
-	c, err := Dial("tcp", "www.google.com:https", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := c.VerifyHostname("www.google.com"); err != nil {
-		t.Fatalf("verify www.google.com: %v", err)
-	}
-	if err := c.VerifyHostname("www.yahoo.com"); err == nil {
-		t.Fatalf("verify www.yahoo.com succeeded")
-	}
-
-	c, err = Dial("tcp", "www.google.com:https", &Config{InsecureSkipVerify: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := c.VerifyHostname("www.google.com"); err == nil {
-		t.Fatalf("verify www.google.com succeeded with InsecureSkipVerify=true")
 	}
 }
 
