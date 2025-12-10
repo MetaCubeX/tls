@@ -1557,7 +1557,7 @@ var getConfigForClientTests = []struct {
 		},
 		func(clientHello *ClientHelloInfo) (*Config, error) {
 			config := testConfigServer.Clone()
-			clear(config.SessionTicketKey[:])
+			config.SessionTicketKey = [32]byte{}
 			config.sessionTicketKeys = nil
 			return config, nil
 		},
@@ -2154,7 +2154,11 @@ func testHandshakeChainExpiryResumption(t *testing.T, version uint16) {
 			testResume(t, serverConfig, clientConfig, false)
 			testResume(t, serverConfig, clientConfig, true)
 
-			expiredNow := time.Unix(0, min(leafNotAfter.UnixNano(), rootNotAfter.UnixNano())).Add(time.Minute)
+			t1, t2 := leafNotAfter.UnixNano(), rootNotAfter.UnixNano()
+			if t1 > t2 {
+				t1 = t2
+			}
+			expiredNow := time.Unix(0, t1).Add(time.Minute)
 
 			freshLeafDER, expiredLeafDER, freshRoot := createChain(expiredNow.Add(time.Hour), expiredNow.Add(time.Hour))
 			clientConfig.Certificates = []Certificate{{

@@ -1,6 +1,6 @@
 module github.com/metacubex/tls
 
-go 1.26
+go 1.20
 
 require (
 	github.com/metacubex/cpu v0.1.0
