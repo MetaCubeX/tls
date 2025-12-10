@@ -15,10 +15,10 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"hash"
-	"internal/cpu"
 	"runtime"
 	_ "unsafe" // for linkname
 
+	"github.com/metacubex/cpu"
 	"golang.org/x/crypto/chacha20poly1305"
 )
 
