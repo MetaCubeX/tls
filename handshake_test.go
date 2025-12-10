@@ -42,19 +42,11 @@ import (
 // reference connection will always change.
 
 var (
-	update       = flag.Bool("update", false, "update golden files on failure")
-	keyFile      = flag.String("keylog", "", "destination file for KeyLogWriter")
-	bogoMode     = flag.Bool("bogo-mode", false, "Enabled bogo shim mode, ignore everything else")
-	bogoFilter   = flag.String("bogo-filter", "", "BoGo test filter")
-	bogoLocalDir = flag.String("bogo-local-dir", "",
-		"If not-present, checkout BoGo into this dir, or otherwise use it as a pre-existing checkout")
-	bogoReport = flag.String("bogo-html-report", "", "File path to render an HTML report with BoGo results")
+	update  = flag.Bool("update", false, "update golden files on failure")
+	keyFile = flag.String("keylog", "", "destination file for KeyLogWriter")
 )
 
 func runTestAndUpdateIfNeeded(t *testing.T, name string, run func(t *testing.T, update bool), wait bool) {
-	// FIPS mode is non-deterministic and so isn't suited for testing against static test transcripts.
-	skipFIPS(t)
-
 	success := t.Run(name, func(t *testing.T) {
 		if !*update && !wait {
 			t.Parallel()
@@ -409,17 +401,9 @@ func TestMain(m *testing.M) {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args)
 		flag.PrintDefaults()
-		if *bogoMode {
-			os.Exit(89)
-		}
 	}
 
 	flag.Parse()
-
-	if *bogoMode {
-		bogoShim()
-		os.Exit(0)
-	}
 
 	os.Exit(runMain(m))
 }
