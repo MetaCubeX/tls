@@ -2008,22 +2008,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 			expectClient:   defaultWithPQ,
 			expectSelected: X25519,
 		},
-		{
-			name: "GODEBUG tlsmlkem=0",
-			preparation: func(t *testing.T) {
-				t.Setenv("GODEBUG", "tlsmlkem=0")
-			},
-			expectClient:   defaultWithoutPQ,
-			expectSelected: X25519,
-		},
-		{
-			name: "GODEBUG tlssecpmlkem=0",
-			preparation: func(t *testing.T) {
-				t.Setenv("GODEBUG", "tlssecpmlkem=0")
-			},
-			expectClient:   []CurveID{X25519MLKEM768, X25519, CurveP256, CurveP384, CurveP521},
-			expectSelected: X25519MLKEM768,
-		},
 	}
 
 	baseConfig := testConfig.Clone()
@@ -2099,18 +2083,7 @@ func TestX509KeyPairPopulateCertificate(t *testing.T) {
 	}
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: certDER})
 
-	t.Run("x509keypairleaf=0", func(t *testing.T) {
-		t.Setenv("GODEBUG", "x509keypairleaf=0")
-		cert, err := X509KeyPair(certPEM, keyPEM)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if cert.Leaf != nil {
-			t.Fatal("Leaf should not be populated")
-		}
-	})
 	t.Run("x509keypairleaf=1", func(t *testing.T) {
-		t.Setenv("GODEBUG", "x509keypairleaf=1")
 		cert, err := X509KeyPair(certPEM, keyPEM)
 		if err != nil {
 			t.Fatal(err)
