@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"crypto"
-	"crypto/hkdf"
 	"crypto/hmac"
 	"crypto/rsa"
 	"encoding/binary"
@@ -20,6 +19,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/metacubex/hkdf"
 	"github.com/metacubex/hpke"
 	"github.com/metacubex/tls/internal/tls13"
 )
