@@ -11,7 +11,6 @@ import (
 	"crypto/hkdf"
 	"crypto/hmac"
 	"crypto/hpke"
-	"crypto/internal/fips140/tls13"
 	"crypto/rsa"
 	"errors"
 	"fmt"
@@ -21,6 +20,8 @@ import (
 	"slices"
 	"sort"
 	"time"
+
+	"github.com/metacubex/tls/internal/tls13"
 )
 
 // maxClientPSKIdentities is the number of client PSK identities the server will

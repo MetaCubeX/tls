@@ -8,11 +8,12 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/hmac"
-	"crypto/internal/fips140/tls13"
 	"crypto/mlkem"
 	"errors"
 	"hash"
 	"io"
+
+	"github.com/metacubex/tls/internal/tls13"
 )
 
 // This file contains the functions necessary to compute the TLS 1.3 key

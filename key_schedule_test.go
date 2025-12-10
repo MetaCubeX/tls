@@ -6,12 +6,13 @@ package tls
 
 import (
 	"bytes"
-	"crypto/internal/fips140/tls13"
 	"crypto/sha256"
 	"encoding/hex"
 	"strings"
 	"testing"
 	"unicode"
+
+	"github.com/metacubex/tls/internal/tls13"
 )
 
 func TestACVPVectors(t *testing.T) {

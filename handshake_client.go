@@ -11,7 +11,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/hpke"
-	"crypto/internal/fips140/tls13"
 	"crypto/rsa"
 	"crypto/subtle"
 	"crypto/x509"
@@ -25,6 +24,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/metacubex/tls/internal/tls13"
 )
 
 type clientHandshakeState struct {
