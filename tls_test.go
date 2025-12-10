@@ -11,9 +11,7 @@ import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/internal/boring"
 	"crypto/rand"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -177,40 +175,6 @@ func newLocalListener(t testing.TB) net.Listener {
 		t.Fatal(err)
 	}
 	return ln
-}
-
-func runWithFIPSEnabled(t *testing.T, testFunc func(t *testing.T)) {
-	originalFIPS := fips140tls.Required()
-	defer func() {
-		if originalFIPS {
-			fips140tls.Force()
-		} else {
-			fips140tls.TestingOnlyAbandon()
-		}
-	}()
-
-	fips140tls.Force()
-	t.Run("fips140tls", testFunc)
-}
-
-func runWithFIPSDisabled(t *testing.T, testFunc func(t *testing.T)) {
-	originalFIPS := fips140tls.Required()
-	defer func() {
-		if originalFIPS {
-			fips140tls.Force()
-		} else {
-			fips140tls.TestingOnlyAbandon()
-		}
-	}()
-
-	fips140tls.TestingOnlyAbandon()
-	t.Run("no-fips140tls", testFunc)
-}
-
-func skipFIPS(t *testing.T) {
-	if fips140tls.Required() {
-		t.Skip("skipping test in FIPS mode")
-	}
 }
 
 func TestDialTimeout(t *testing.T) {
@@ -1286,9 +1250,6 @@ func TestConnectionState(t *testing.T) {
 	}
 
 	for _, v := range []uint16{VersionTLS10, VersionTLS12, VersionTLS13} {
-		if !isFIPSVersion(v) && fips140tls.Required() {
-			t.Skipf("skipping test in FIPS 140-3 mode for non-FIPS version %x", v)
-		}
 		var name string
 		switch v {
 		case VersionTLS10:
@@ -1369,8 +1330,6 @@ func TestBuildNameToCertificate_doesntModifyCertificates(t *testing.T) {
 func testingKey(s string) string { return strings.ReplaceAll(s, "TESTING KEY", "PRIVATE KEY") }
 
 func TestClientHelloInfo_SupportsCertificate(t *testing.T) {
-	skipFIPS(t) // Test certificates not FIPS compatible.
-
 	rsaCert := &Certificate{
 		Certificate: [][]byte{testRSACertificate},
 		PrivateKey:  testRSAPrivateKey,
@@ -1820,8 +1779,6 @@ func TestPKCS1OnlyCert(t *testing.T) {
 }
 
 func TestVerifyCertificates(t *testing.T) {
-	skipFIPS(t) // Test certificates not FIPS compatible.
-
 	// See https://go.dev/issue/31641.
 	t.Run("TLSv12", func(t *testing.T) { testVerifyCertificates(t, VersionTLS12) })
 	t.Run("TLSv13", func(t *testing.T) { testVerifyCertificates(t, VersionTLS13) })
@@ -2097,9 +2054,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 	baseConfig.CurvePreferences = nil
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if fips140tls.Required() && test.expectSelected == X25519 {
-				t.Skip("X25519 not supported in FIPS mode")
-			}
 			if test.preparation != nil {
 				test.preparation(t)
 			} else {
@@ -2111,9 +2065,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 			}
 			serverConfig.GetConfigForClient = func(hello *ClientHelloInfo) (*Config, error) {
 				expectClient := slices.Clone(test.expectClient)
-				expectClient = slices.DeleteFunc(expectClient, func(c CurveID) bool {
-					return fips140tls.Required() && c == X25519
-				})
 				if !slices.Equal(hello.SupportedCurves, expectClient) {
 					t.Errorf("got client curves %v, expected %v", hello.SupportedCurves, expectClient)
 				}

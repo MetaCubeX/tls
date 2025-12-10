@@ -14,7 +14,6 @@ import (
 	"crypto/internal/fips140/tls13"
 	"crypto/rsa"
 	"crypto/subtle"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -130,9 +129,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCli
 			hello.cipherSuites = nil
 		}
 
-		if fips140tls.Required() {
-			hello.cipherSuites = append(hello.cipherSuites, allowedCipherSuitesTLS13FIPS...)
-		} else if hasAESGCMHardwareSupport {
+		if hasAESGCMHardwareSupport {
 			hello.cipherSuites = append(hello.cipherSuites, defaultCipherSuitesTLS13...)
 		} else {
 			hello.cipherSuites = append(hello.cipherSuites, defaultCipherSuitesTLS13NoAES...)
@@ -422,11 +419,6 @@ func (c *Conn) loadSession(hello *clientHelloMsg) (
 			return nil, nil, nil, nil
 		}
 
-		// FIPS 140-3 requires the use of Extended Master Secret.
-		if !session.extMasterSecret && fips140tls.Required() {
-			return nil, nil, nil, nil
-		}
-
 		hello.sessionTicket = session.ticket
 		return
 	}
@@ -617,11 +609,11 @@ func (hs *clientHandshakeState) pickCipherSuite() error {
 		return errors.New("tls: server chose an unconfigured cipher suite")
 	}
 
-	if hs.c.config.CipherSuites == nil && !fips140tls.Required() && rsaKexCiphers[hs.suite.id] {
+	if hs.c.config.CipherSuites == nil && rsaKexCiphers[hs.suite.id] {
 		tlsrsakex.Value() // ensure godebug is initialized
 		tlsrsakex.IncNonDefault()
 	}
-	if hs.c.config.CipherSuites == nil && !fips140tls.Required() && tdesCiphers[hs.suite.id] {
+	if hs.c.config.CipherSuites == nil && tdesCiphers[hs.suite.id] {
 		tls3des.Value() // ensure godebug is initialized
 		tls3des.IncNonDefault()
 	}
@@ -760,10 +752,6 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		hs.masterSecret = extMasterFromPreMasterSecret(c.vers, hs.suite, preMasterSecret,
 			hs.finishedHash.Sum())
 	} else {
-		if fips140tls.Required() {
-			c.sendAlert(alertHandshakeFailure)
-			return errors.New("tls: FIPS 140-3 requires the use of Extended Master Secret")
-		}
 		hs.masterSecret = masterFromPreMasterSecret(c.vers, hs.suite, preMasterSecret,
 			hs.hello.random, hs.serverHello.random)
 	}
@@ -1129,11 +1117,7 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 				return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}
 			}
 
-			c.verifiedChains, err = fipsAllowedChains(chains)
-			if err != nil {
-				c.sendAlert(alertBadCertificate)
-				return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}
-			}
+			c.verifiedChains = chains
 		}
 	} else if !c.config.InsecureSkipVerify {
 		opts := x509.VerifyOptions{
@@ -1152,11 +1136,7 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 			return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}
 		}
 
-		c.verifiedChains, err = fipsAllowedChains(chains)
-		if err != nil {
-			c.sendAlert(alertBadCertificate)
-			return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}
-		}
+		c.verifiedChains = chains
 	}
 
 	switch certs[0].PublicKey.(type) {
