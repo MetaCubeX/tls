@@ -5,15 +5,14 @@
 package tls
 
 import (
-	"crypto"
 	"crypto/ecdh"
 	"crypto/fips140"
 	"crypto/hmac"
-	"crypto/mlkem"
 	"errors"
 	"hash"
 	"io"
 
+	"github.com/metacubex/mlkem"
 	"github.com/metacubex/tls/internal/tls13"
 )
 
@@ -54,7 +53,7 @@ func (c *cipherSuiteTLS13) exportKeyingMaterial(s *tls13.MasterSecret, transcrip
 
 type keySharePrivateKeys struct {
 	ecdhe *ecdh.PrivateKey
-	mlkem crypto.Decapsulator
+	mlkem mlkem.Decapsulator
 }
 
 // A keyExchange implements a TLS 1.3 KEM.
@@ -75,16 +74,16 @@ type keyExchange interface {
 }
 
 func keyExchangeForCurveID(id CurveID) (keyExchange, error) {
-	mlkemGenerateKey768 := func() (crypto.Decapsulator, error) {
+	mlkemGenerateKey768 := func() (mlkem.Decapsulator, error) {
 		return mlkem.GenerateKey768()
 	}
-	mlkemGenerateKey1024 := func() (crypto.Decapsulator, error) {
+	mlkemGenerateKey1024 := func() (mlkem.Decapsulator, error) {
 		return mlkem.GenerateKey1024()
 	}
-	mlkemNewPublicKey768 := func(b []byte) (crypto.Encapsulator, error) {
+	mlkemNewPublicKey768 := func(b []byte) (mlkem.Encapsulator, error) {
 		return mlkem.NewEncapsulationKey768(b)
 	}
-	mlkemNewPublicKey1024 := func(b []byte) (crypto.Encapsulator, error) {
+	mlkemNewPublicKey1024 := func(b []byte) (mlkem.Encapsulator, error) {
 		return mlkem.NewEncapsulationKey1024(b)
 	}
 	switch id {
@@ -191,8 +190,8 @@ type hybridKeyExchange struct {
 	mlkemPublicKeySize  int
 	mlkemCiphertextSize int
 
-	mlkemGenerateKey  func() (crypto.Decapsulator, error)
-	mlkemNewPublicKey func([]byte) (crypto.Encapsulator, error)
+	mlkemGenerateKey  func() (mlkem.Decapsulator, error)
+	mlkemNewPublicKey func([]byte) (mlkem.Encapsulator, error)
 }
 
 func (ke *hybridKeyExchange) keyShares(rand io.Reader) (*keySharePrivateKeys, []keyShare, error) {
