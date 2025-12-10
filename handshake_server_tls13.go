@@ -847,7 +847,7 @@ func (hs *serverHandshakeStateTLS13) sendServerCertificate() error {
 	if sigType == signatureRSAPSS {
 		signOpts = &rsa.PSSOptions{SaltLength: rsa.PSSSaltLengthEqualsHash, Hash: sigHash}
 	}
-	sig, err := crypto.SignMessage(hs.cert.PrivateKey.(crypto.Signer), c.config.rand(), signed, signOpts)
+	sig, err := cryptoSignMessage(hs.cert.PrivateKey.(crypto.Signer), c.config.rand(), signed, signOpts)
 	if err != nil {
 		public := hs.cert.PrivateKey.(crypto.Signer).Public()
 		if rsaKey, ok := public.(*rsa.PublicKey); ok && sigType == signatureRSAPSS &&
