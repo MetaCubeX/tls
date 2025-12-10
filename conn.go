@@ -1578,7 +1578,7 @@ func (c *Conn) handshakeContext(ctx context.Context) (ret error) {
 			c.quicSetReadSecret(QUICEncryptionLevelApplication, c.cipherSuite, c.in.trafficSecret)
 		} else {
 			c.out.Lock()
-			a, ok := errors.AsType[alert](c.out.err)
+			a, ok := errorsAsType[alert](c.out.err)
 			if !ok {
 				a = alertInternalError
 			}
