@@ -10,7 +10,6 @@ import (
 	"crypto"
 	"crypto/hkdf"
 	"crypto/hmac"
-	"crypto/hpke"
 	"crypto/rsa"
 	"encoding/binary"
 	"errors"
@@ -21,6 +20,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/metacubex/hpke"
 	"github.com/metacubex/tls/internal/tls13"
 )
 
