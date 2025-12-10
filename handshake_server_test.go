@@ -1612,7 +1612,7 @@ var getConfigForClientTests = []struct {
 		},
 		func(clientHello *ClientHelloInfo) (*Config, error) {
 			config := testConfig.Clone()
-			clear(config.SessionTicketKey[:])
+			config.SessionTicketKey = [32]byte{}
 			config.sessionTicketKeys = nil
 			return config, nil
 		},
