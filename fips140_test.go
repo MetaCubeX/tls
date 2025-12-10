@@ -7,7 +7,6 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/internal/boring"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -118,7 +117,7 @@ func isFIPSCipherSuite(id uint16) bool {
 	case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,
 		TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:
 		// Only for the native module.
-		return !boring.Enabled
+		return true
 	}
 	switch {
 	case strings.Contains(name, "CHACHA20"):
@@ -138,7 +137,7 @@ func isFIPSCurve(id CurveID) bool {
 		return true
 	case X25519MLKEM768, SecP256r1MLKEM768, SecP384r1MLKEM1024:
 		// Only for the native module.
-		return !boring.Enabled
+		return true
 	case X25519:
 		return false
 	default:
@@ -169,7 +168,7 @@ func isFIPSSignatureScheme(alg SignatureScheme) bool {
 		return true
 	case Ed25519:
 		// Only for the native module.
-		return !boring.Enabled
+		return true
 	case PKCS1WithSHA1, ECDSAWithSHA1:
 		return false
 	default:
