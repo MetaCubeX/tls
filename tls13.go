@@ -4,7 +4,7 @@
 
 // Package tls13 implements the TLS 1.3 Key Schedule as specified in RFC 8446,
 // Section 7.1 and allowed by FIPS 140-3 IG 2.4.B Resolution 7.
-package tls13
+package tls
 
 import (
 	"encoding/binary"
@@ -17,8 +17,8 @@ import (
 // the underlying functions because the TLS 1.3 KDF does not have a standard of
 // its own.
 
-// ExpandLabel implements HKDF-Expand-Label from RFC 8446, Section 7.1.
-func ExpandLabel[H hash.Hash](hash func() H, secret []byte, label string, context []byte, length int) []byte {
+// tls13ExpandLabel implements HKDF-Expand-Label from RFC 8446, Section 7.1.
+func tls13ExpandLabel[H hash.Hash](hash func() H, secret []byte, label string, context []byte, length int) []byte {
 	if len("tls13 ")+len(label) > 255 || len(context) > 255 {
 		// It should be impossible for this to panic: labels are fixed strings,
 		// and context is either a fixed-length computed hash, or parsed from a
@@ -44,7 +44,7 @@ func ExpandLabel[H hash.Hash](hash func() H, secret []byte, label string, contex
 	return b
 }
 
-func extract[H hash.Hash](hash func() H, newSecret, currentSecret []byte) []byte {
+func tls13extract[H hash.Hash](hash func() H, newSecret, currentSecret []byte) []byte {
 	if newSecret == nil {
 		newSecret = make([]byte, hash().Size())
 	}
@@ -55,11 +55,11 @@ func extract[H hash.Hash](hash func() H, newSecret, currentSecret []byte) []byte
 	return b
 }
 
-func deriveSecret[H hash.Hash](hash func() H, secret []byte, label string, transcript hash.Hash) []byte {
+func tls13deriveSecret[H hash.Hash](hash func() H, secret []byte, label string, transcript hash.Hash) []byte {
 	if transcript == nil {
 		transcript = hash()
 	}
-	return ExpandLabel(hash, secret, label, transcript.Sum(nil), transcript.Size())
+	return tls13ExpandLabel(hash, secret, label, transcript.Sum(nil), transcript.Size())
 }
 
 const (
@@ -74,114 +74,114 @@ const (
 	resumptionLabel               = "res master"
 )
 
-type EarlySecret struct {
+type tls13EarlySecret struct {
 	secret []byte
 	hash   func() hash.Hash
 }
 
-func NewEarlySecret[H hash.Hash](h func() H, psk []byte) *EarlySecret {
-	return &EarlySecret{
-		secret: extract(h, psk, nil),
+func tls13NewEarlySecret[H hash.Hash](h func() H, psk []byte) *tls13EarlySecret {
+	return &tls13EarlySecret{
+		secret: tls13extract(h, psk, nil),
 		hash:   func() hash.Hash { return h() },
 	}
 }
 
-func (s *EarlySecret) ResumptionBinderKey() []byte {
-	return deriveSecret(s.hash, s.secret, resumptionBinderLabel, nil)
+func (s *tls13EarlySecret) ResumptionBinderKey() []byte {
+	return tls13deriveSecret(s.hash, s.secret, resumptionBinderLabel, nil)
 }
 
 // ClientEarlyTrafficSecret derives the client_early_traffic_secret from the
 // early secret and the transcript up to the ClientHello.
-func (s *EarlySecret) ClientEarlyTrafficSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, clientEarlyTrafficLabel, transcript)
+func (s *tls13EarlySecret) ClientEarlyTrafficSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, clientEarlyTrafficLabel, transcript)
 }
 
-type HandshakeSecret struct {
+type tls13HandshakeSecret struct {
 	secret []byte
 	hash   func() hash.Hash
 }
 
-func (s *EarlySecret) HandshakeSecret(sharedSecret []byte) *HandshakeSecret {
-	derived := deriveSecret(s.hash, s.secret, "derived", nil)
-	return &HandshakeSecret{
-		secret: extract(s.hash, sharedSecret, derived),
+func (s *tls13EarlySecret) HandshakeSecret(sharedSecret []byte) *tls13HandshakeSecret {
+	derived := tls13deriveSecret(s.hash, s.secret, "derived", nil)
+	return &tls13HandshakeSecret{
+		secret: tls13extract(s.hash, sharedSecret, derived),
 		hash:   s.hash,
 	}
 }
 
 // ClientHandshakeTrafficSecret derives the client_handshake_traffic_secret from
 // the handshake secret and the transcript up to the ServerHello.
-func (s *HandshakeSecret) ClientHandshakeTrafficSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, clientHandshakeTrafficLabel, transcript)
+func (s *tls13HandshakeSecret) ClientHandshakeTrafficSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, clientHandshakeTrafficLabel, transcript)
 }
 
 // ServerHandshakeTrafficSecret derives the server_handshake_traffic_secret from
 // the handshake secret and the transcript up to the ServerHello.
-func (s *HandshakeSecret) ServerHandshakeTrafficSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, serverHandshakeTrafficLabel, transcript)
+func (s *tls13HandshakeSecret) ServerHandshakeTrafficSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, serverHandshakeTrafficLabel, transcript)
 }
 
-type MasterSecret struct {
+type tls13MasterSecret struct {
 	secret []byte
 	hash   func() hash.Hash
 }
 
-func (s *HandshakeSecret) MasterSecret() *MasterSecret {
-	derived := deriveSecret(s.hash, s.secret, "derived", nil)
-	return &MasterSecret{
-		secret: extract(s.hash, nil, derived),
+func (s *tls13HandshakeSecret) MasterSecret() *tls13MasterSecret {
+	derived := tls13deriveSecret(s.hash, s.secret, "derived", nil)
+	return &tls13MasterSecret{
+		secret: tls13extract(s.hash, nil, derived),
 		hash:   s.hash,
 	}
 }
 
 // ClientApplicationTrafficSecret derives the client_application_traffic_secret_0
 // from the master secret and the transcript up to the server Finished.
-func (s *MasterSecret) ClientApplicationTrafficSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, clientApplicationTrafficLabel, transcript)
+func (s *tls13MasterSecret) ClientApplicationTrafficSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, clientApplicationTrafficLabel, transcript)
 }
 
 // ServerApplicationTrafficSecret derives the server_application_traffic_secret_0
 // from the master secret and the transcript up to the server Finished.
-func (s *MasterSecret) ServerApplicationTrafficSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, serverApplicationTrafficLabel, transcript)
+func (s *tls13MasterSecret) ServerApplicationTrafficSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, serverApplicationTrafficLabel, transcript)
 }
 
 // ResumptionMasterSecret derives the resumption_master_secret from the master secret
 // and the transcript up to the client Finished.
-func (s *MasterSecret) ResumptionMasterSecret(transcript hash.Hash) []byte {
-	return deriveSecret(s.hash, s.secret, resumptionLabel, transcript)
+func (s *tls13MasterSecret) ResumptionMasterSecret(transcript hash.Hash) []byte {
+	return tls13deriveSecret(s.hash, s.secret, resumptionLabel, transcript)
 }
 
-type ExporterMasterSecret struct {
+type tls13ExporterMasterSecret struct {
 	secret []byte
 	hash   func() hash.Hash
 }
 
 // ExporterMasterSecret derives the exporter_master_secret from the master secret
 // and the transcript up to the server Finished.
-func (s *MasterSecret) ExporterMasterSecret(transcript hash.Hash) *ExporterMasterSecret {
-	return &ExporterMasterSecret{
-		secret: deriveSecret(s.hash, s.secret, exporterLabel, transcript),
+func (s *tls13MasterSecret) ExporterMasterSecret(transcript hash.Hash) *tls13ExporterMasterSecret {
+	return &tls13ExporterMasterSecret{
+		secret: tls13deriveSecret(s.hash, s.secret, exporterLabel, transcript),
 		hash:   s.hash,
 	}
 }
 
 // EarlyExporterMasterSecret derives the exporter_master_secret from the early secret
 // and the transcript up to the ClientHello.
-func (s *EarlySecret) EarlyExporterMasterSecret(transcript hash.Hash) *ExporterMasterSecret {
-	return &ExporterMasterSecret{
-		secret: deriveSecret(s.hash, s.secret, earlyExporterLabel, transcript),
+func (s *tls13EarlySecret) EarlyExporterMasterSecret(transcript hash.Hash) *tls13ExporterMasterSecret {
+	return &tls13ExporterMasterSecret{
+		secret: tls13deriveSecret(s.hash, s.secret, earlyExporterLabel, transcript),
 		hash:   s.hash,
 	}
 }
 
-func (s *ExporterMasterSecret) Exporter(label string, context []byte, length int) []byte {
-	secret := deriveSecret(s.hash, s.secret, label, nil)
+func (s *tls13ExporterMasterSecret) Exporter(label string, context []byte, length int) []byte {
+	secret := tls13deriveSecret(s.hash, s.secret, label, nil)
 	h := s.hash()
 	h.Write(context)
-	return ExpandLabel(s.hash, secret, "exporter", h.Sum(nil), length)
+	return tls13ExpandLabel(s.hash, secret, "exporter", h.Sum(nil), length)
 }
 
-func TestingOnlyExporterSecret(s *ExporterMasterSecret) []byte {
+func tls13TestingOnlyExporterSecret(s *tls13ExporterMasterSecret) []byte {
 	return s.secret
 }

@@ -21,7 +21,6 @@ import (
 
 	"github.com/metacubex/hkdf"
 	"github.com/metacubex/hpke"
-	"github.com/metacubex/tls/internal/tls13"
 )
 
 // maxClientPSKIdentities is the number of client PSK identities the server will
@@ -52,10 +51,10 @@ type serverHandshakeStateTLS13 struct {
 	suite           *cipherSuiteTLS13
 	cert            *Certificate
 	sigAlg          SignatureScheme
-	earlySecret     *tls13.EarlySecret
+	earlySecret     *tls13EarlySecret
 	sharedKey       []byte
-	handshakeSecret *tls13.HandshakeSecret
-	masterSecret    *tls13.MasterSecret
+	handshakeSecret *tls13HandshakeSecret
+	masterSecret    *tls13MasterSecret
 	trafficSecret   []byte // client_application_traffic_secret_0
 	transcript      hash.Hash
 	clientFinished  []byte
@@ -377,7 +376,7 @@ func (hs *serverHandshakeStateTLS13) checkForResumption() error {
 			}
 		}
 
-		hs.earlySecret = tls13.NewEarlySecret(hs.suite.hash.New, sessionState.secret)
+		hs.earlySecret = tls13NewEarlySecret(hs.suite.hash.New, sessionState.secret)
 		binderKey := hs.earlySecret.ResumptionBinderKey()
 		// Clone the transcript in case a HelloRetryRequest was recorded.
 		transcript := cloneHash(hs.transcript, hs.suite.hash)
@@ -549,7 +548,7 @@ func (hs *serverHandshakeStateTLS13) doHelloRetryRequest(selectedGroup CurveID) 
 			c.sendAlert(alertInternalError)
 			return nil, err
 		}
-		acceptConfirmation := tls13.ExpandLabel(h, prf, "hrr ech accept confirmation", confTranscript.Sum(nil), 8)
+		acceptConfirmation := tls13ExpandLabel(h, prf, "hrr ech accept confirmation", confTranscript.Sum(nil), 8)
 		helloRetryRequest.encryptedClientHello = acceptConfirmation
 	}
 
@@ -713,7 +712,7 @@ func (hs *serverHandshakeStateTLS13) sendServerParameters() error {
 			c.sendAlert(alertInternalError)
 			return err
 		}
-		acceptConfirmation := tls13.ExpandLabel(h, prk, "ech accept confirmation", echTranscript.Sum(nil), 8)
+		acceptConfirmation := tls13ExpandLabel(h, prk, "ech accept confirmation", echTranscript.Sum(nil), 8)
 		copy(hs.hello.random[32-8:], acceptConfirmation)
 	}
 
@@ -731,7 +730,7 @@ func (hs *serverHandshakeStateTLS13) sendServerParameters() error {
 
 	earlySecret := hs.earlySecret
 	if earlySecret == nil {
-		earlySecret = tls13.NewEarlySecret(hs.suite.hash.New, nil)
+		earlySecret = tls13NewEarlySecret(hs.suite.hash.New, nil)
 	}
 	hs.handshakeSecret = earlySecret.HandshakeSecret(hs.sharedKey)
 
@@ -964,7 +963,7 @@ func (c *Conn) sendSessionTicket(earlyData bool, extra [][]byte) error {
 	}
 	// ticket_nonce, which must be unique per connection, is always left at
 	// zero because we only ever send one ticket per connection.
-	psk := tls13.ExpandLabel(suite.hash.New, c.resumptionSecret, "resumption",
+	psk := tls13ExpandLabel(suite.hash.New, c.resumptionSecret, "resumption",
 		nil, suite.hash.Size())
 
 	m := new(newSessionTicketMsgTLS13)

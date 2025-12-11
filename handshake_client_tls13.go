@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/metacubex/hkdf"
-	"github.com/metacubex/tls/internal/tls13"
 )
 
 type clientHandshakeStateTLS13 struct {
@@ -28,7 +27,7 @@ type clientHandshakeStateTLS13 struct {
 	keyShareKeys *keySharePrivateKeys
 
 	session     *SessionState
-	earlySecret *tls13.EarlySecret
+	earlySecret *tls13EarlySecret
 	binderKey   []byte
 
 	certReq       *certificateRequestMsgTLS13
@@ -36,7 +35,7 @@ type clientHandshakeStateTLS13 struct {
 	sentDummyCCS  bool
 	suite         *cipherSuiteTLS13
 	transcript    hash.Hash
-	masterSecret  *tls13.MasterSecret
+	masterSecret  *tls13MasterSecret
 	trafficSecret []byte // client_application_traffic_secret_0
 
 	echContext *echClientContext
@@ -96,7 +95,7 @@ func (hs *clientHandshakeStateTLS13) handshake() error {
 			c.sendAlert(alertInternalError)
 			return err
 		}
-		acceptConfirmation := tls13.ExpandLabel(h, prk, "ech accept confirmation", confTranscript.Sum(nil), 8)
+		acceptConfirmation := tls13ExpandLabel(h, prk, "ech accept confirmation", confTranscript.Sum(nil), 8)
 		if subtle.ConstantTimeCompare(acceptConfirmation, hs.serverHello.random[len(hs.serverHello.random)-8:]) == 1 {
 			hs.hello = hs.echContext.innerHello
 			c.serverName = c.config.ServerName
@@ -271,7 +270,7 @@ func (hs *clientHandshakeStateTLS13) processHelloRetryRequest() error {
 				c.sendAlert(alertInternalError)
 				return err
 			}
-			acceptConfirmation := tls13.ExpandLabel(h, prk, "hrr ech accept confirmation", confTranscript.Sum(nil), 8)
+			acceptConfirmation := tls13ExpandLabel(h, prk, "hrr ech accept confirmation", confTranscript.Sum(nil), 8)
 			if subtle.ConstantTimeCompare(acceptConfirmation, hs.serverHello.encryptedClientHello) == 1 {
 				hello = hs.echContext.innerHello
 				c.serverName = c.config.ServerName
@@ -486,7 +485,7 @@ func (hs *clientHandshakeStateTLS13) establishHandshakeKeys() error {
 
 	earlySecret := hs.earlySecret
 	if !hs.usingPSK {
-		earlySecret = tls13.NewEarlySecret(hs.suite.hash.New, nil)
+		earlySecret = tls13NewEarlySecret(hs.suite.hash.New, nil)
 	}
 
 	handshakeSecret := earlySecret.HandshakeSecret(sharedKey)
@@ -867,7 +866,7 @@ func (c *Conn) handleNewSessionTicket(msg *newSessionTicketMsgTLS13) error {
 		return c.sendAlert(alertInternalError)
 	}
 
-	psk := tls13.ExpandLabel(cipherSuite.hash.New, c.resumptionSecret, "resumption",
+	psk := tls13ExpandLabel(cipherSuite.hash.New, c.resumptionSecret, "resumption",
 		msg.nonce, cipherSuite.hash.Size())
 
 	session := c.sessionState()
