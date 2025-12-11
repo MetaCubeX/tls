@@ -818,6 +818,7 @@ func TestHandshakeClientCertRSA(t *testing.T) {
 }
 
 func TestHandshakeClientCertECDSA(t *testing.T) {
+	skipECDSATest(t)
 	config := testConfigClient.Clone()
 	config.Certificates = []Certificate{testClientECDSAP256Cert}
 
