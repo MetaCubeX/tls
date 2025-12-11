@@ -13,7 +13,6 @@ import (
 	"crypto/subtle"
 	"errors"
 	"hash"
-	"slices"
 	"time"
 
 	"github.com/metacubex/hkdf"
@@ -309,11 +308,11 @@ func (hs *clientHandshakeStateTLS13) processHelloRetryRequest() error {
 	// a group we advertised but did not send a key share for, and send a key
 	// share for it this time.
 	if curveID := hs.serverHello.selectedGroup; curveID != 0 {
-		if !slices.Contains(hello.supportedCurves, curveID) {
+		if !slicesContains(hello.supportedCurves, curveID) {
 			c.sendAlert(alertIllegalParameter)
 			return errors.New("tls: server selected unsupported group")
 		}
-		if slices.ContainsFunc(hs.hello.keyShares, func(ks keyShare) bool {
+		if slicesContainsFunc(hs.hello.keyShares, func(ks keyShare) bool {
 			return ks.group == curveID
 		}) {
 			c.sendAlert(alertIllegalParameter)
@@ -430,7 +429,7 @@ func (hs *clientHandshakeStateTLS13) processServerHello() error {
 		c.sendAlert(alertIllegalParameter)
 		return errors.New("tls: server did not send a key share")
 	}
-	if !slices.ContainsFunc(hs.hello.keyShares, func(ks keyShare) bool {
+	if !slicesContainsFunc(hs.hello.keyShares, func(ks keyShare) bool {
 		return ks.group == hs.serverHello.serverShare.group
 	}) {
 		c.sendAlert(alertIllegalParameter)

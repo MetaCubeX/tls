@@ -21,7 +21,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -1131,11 +1130,11 @@ func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 			}
 
 			// Go's TLS client presents extensions in the ClientHello sorted by extension ID
-			slices.Sort(expectedExtensions)
+			slicesSort(expectedExtensions)
 
 			serverConfig := testConfig.Clone()
 			serverConfig.GetCertificate = func(clientHello *ClientHelloInfo) (*Certificate, error) {
-				if !slices.Equal(expectedExtensions, clientHello.Extensions) {
+				if !slicesEqual(expectedExtensions, clientHello.Extensions) {
 					t.Errorf("expected extensions on ClientHelloInfo (%v) to match clientHelloMsg (%v)", expectedExtensions, clientHello.Extensions)
 				}
 				called.Add(1)
@@ -1387,7 +1386,7 @@ func benchmarkHandshakeServer(b *testing.B, version uint16, cipherSuite uint16, 
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		replay := &replayingConn{t: b, flows: slices.Clone(flows), reading: true}
+		replay := &replayingConn{t: b, flows: slicesClone(flows), reading: true}
 		server := Server(replay, config)
 		if err := server.Handshake(); err != nil {
 			b.Fatalf("handshake failed: %v", err)

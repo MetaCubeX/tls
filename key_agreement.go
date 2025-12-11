@@ -14,7 +14,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"slices"
 )
 
 // A keyAgreement implements the client and server side of a TLS 1.0–1.2 key
@@ -104,7 +103,7 @@ func (ka rsaKeyAgreement) generateClientKeyExchange(config *Config, clientHello 
 	return preMasterSecret, ckx, nil
 }
 
-// sha1Hash calculates a SHA1 hash over the given byte slices.
+// sha1Hash calculates a SHA1 hash over the given byte slices
 func sha1Hash(slices [][]byte) []byte {
 	hsha1 := sha1.New()
 	for _, slice := range slices {
@@ -200,7 +199,7 @@ func (ka *ecdheKeyAgreement) generateServerKeyExchange(config *Config, cert *Cer
 		if err != nil {
 			return nil, err
 		}
-		signed := slices.Concat(clientHello.random, hello.random, serverECDHEParams)
+		signed := slicesConcat(clientHello.random, hello.random, serverECDHEParams)
 		if (sigType == signaturePKCS1v15 || sigType == signatureRSAPSS) != ka.isRSA {
 			return nil, errors.New("tls: certificate cannot be used with the selected cipher suite")
 		}
@@ -297,7 +296,7 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 	}
 	sig = sig[2:]
 
-	if !slices.Contains(clientHello.supportedCurves, ka.curveID) {
+	if !slicesContains(clientHello.supportedCurves, ka.curveID) {
 		return errors.New("tls: server selected unoffered curve")
 	}
 
@@ -339,7 +338,7 @@ func (ka *ecdheKeyAgreement) processServerKeyExchange(config *Config, clientHell
 		if (sigType == signaturePKCS1v15 || sigType == signatureRSAPSS) != ka.isRSA {
 			return errServerKeyExchange
 		}
-		signed := slices.Concat(clientHello.random, serverHello.random, serverECDHEParams)
+		signed := slicesConcat(clientHello.random, serverHello.random, serverECDHEParams)
 		if err := verifyHandshakeSignature(sigType, cert.PublicKey, sigHash, signed, sig); err != nil {
 			return errors.New("tls: invalid signature by the server certificate: " + err.Error())
 		}

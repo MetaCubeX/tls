@@ -5,7 +5,6 @@
 package tls
 
 import (
-	"slices"
 	_ "unsafe" // for linkname
 )
 
@@ -44,15 +43,15 @@ func defaultSupportedSignatureAlgorithms() []SignatureScheme {
 
 func supportedCipherSuites(aesGCMPreferred bool) []uint16 {
 	if aesGCMPreferred {
-		return slices.Clone(cipherSuitesPreferenceOrder)
+		return slicesClone(cipherSuitesPreferenceOrder)
 	} else {
-		return slices.Clone(cipherSuitesPreferenceOrderNoAES)
+		return slicesClone(cipherSuitesPreferenceOrderNoAES)
 	}
 }
 
 func defaultCipherSuites(aesGCMPreferred bool) []uint16 {
 	cipherSuites := supportedCipherSuites(aesGCMPreferred)
-	return slices.DeleteFunc(cipherSuites, func(c uint16) bool {
+	return slicesDeleteFunc(cipherSuites, func(c uint16) bool {
 		return disabledCipherSuites[c] ||
 			rsaKexCiphers[c] ||
 			tdesCiphers[c]

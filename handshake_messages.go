@@ -7,7 +7,6 @@ package tls
 import (
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
 
 	"golang.org/x/crypto/cryptobyte"
@@ -685,34 +684,34 @@ func (m *clientHelloMsg) originalBytes() []byte {
 
 func (m *clientHelloMsg) clone() *clientHelloMsg {
 	return &clientHelloMsg{
-		original:                         slices.Clone(m.original),
+		original:                         slicesClone(m.original),
 		vers:                             m.vers,
-		random:                           slices.Clone(m.random),
-		sessionId:                        slices.Clone(m.sessionId),
-		cipherSuites:                     slices.Clone(m.cipherSuites),
-		compressionMethods:               slices.Clone(m.compressionMethods),
+		random:                           slicesClone(m.random),
+		sessionId:                        slicesClone(m.sessionId),
+		cipherSuites:                     slicesClone(m.cipherSuites),
+		compressionMethods:               slicesClone(m.compressionMethods),
 		serverName:                       m.serverName,
 		ocspStapling:                     m.ocspStapling,
-		supportedCurves:                  slices.Clone(m.supportedCurves),
-		supportedPoints:                  slices.Clone(m.supportedPoints),
+		supportedCurves:                  slicesClone(m.supportedCurves),
+		supportedPoints:                  slicesClone(m.supportedPoints),
 		ticketSupported:                  m.ticketSupported,
-		sessionTicket:                    slices.Clone(m.sessionTicket),
-		supportedSignatureAlgorithms:     slices.Clone(m.supportedSignatureAlgorithms),
-		supportedSignatureAlgorithmsCert: slices.Clone(m.supportedSignatureAlgorithmsCert),
+		sessionTicket:                    slicesClone(m.sessionTicket),
+		supportedSignatureAlgorithms:     slicesClone(m.supportedSignatureAlgorithms),
+		supportedSignatureAlgorithmsCert: slicesClone(m.supportedSignatureAlgorithmsCert),
 		secureRenegotiationSupported:     m.secureRenegotiationSupported,
-		secureRenegotiation:              slices.Clone(m.secureRenegotiation),
+		secureRenegotiation:              slicesClone(m.secureRenegotiation),
 		extendedMasterSecret:             m.extendedMasterSecret,
-		alpnProtocols:                    slices.Clone(m.alpnProtocols),
+		alpnProtocols:                    slicesClone(m.alpnProtocols),
 		scts:                             m.scts,
-		supportedVersions:                slices.Clone(m.supportedVersions),
-		cookie:                           slices.Clone(m.cookie),
-		keyShares:                        slices.Clone(m.keyShares),
+		supportedVersions:                slicesClone(m.supportedVersions),
+		cookie:                           slicesClone(m.cookie),
+		keyShares:                        slicesClone(m.keyShares),
 		earlyData:                        m.earlyData,
-		pskModes:                         slices.Clone(m.pskModes),
-		pskIdentities:                    slices.Clone(m.pskIdentities),
-		pskBinders:                       slices.Clone(m.pskBinders),
-		quicTransportParameters:          slices.Clone(m.quicTransportParameters),
-		encryptedClientHello:             slices.Clone(m.encryptedClientHello),
+		pskModes:                         slicesClone(m.pskModes),
+		pskIdentities:                    slicesClone(m.pskIdentities),
+		pskBinders:                       slicesClone(m.pskBinders),
+		quicTransportParameters:          slicesClone(m.quicTransportParameters),
+		encryptedClientHello:             slicesClone(m.encryptedClientHello),
 	}
 }
 

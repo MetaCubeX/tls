@@ -25,7 +25,6 @@ import (
 	"net"
 	"os"
 	"reflect"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1533,11 +1532,11 @@ func TestCipherSuites(t *testing.T) {
 		}
 
 		if cc.Insecure {
-			if slices.Contains(defaultCipherSuites(false), c.id) {
+			if slicesContains(defaultCipherSuites(false), c.id) {
 				t.Errorf("%#04x: insecure suite in default list", c.id)
 			}
 		} else {
-			if !slices.Contains(defaultCipherSuites(false), c.id) {
+			if !slicesContains(defaultCipherSuites(false), c.id) {
 				t.Errorf("%#04x: secure suite not in default list", c.id)
 			}
 		}
@@ -1679,7 +1678,7 @@ func TestCipherSuites(t *testing.T) {
 			t.Fatalf("two ciphersuites are equal by all criteria: %v and %v", aName, bName)
 			panic("unreachable")
 		}
-		if !slices.IsSortedFunc(prefOrder, isBetter) {
+		if !slicesIsSortedFunc(prefOrder, isBetter) {
 			t.Error("preference order is not sorted according to the rules")
 		}
 	}
@@ -2024,8 +2023,8 @@ func TestHandshakeMLKEM(t *testing.T) {
 				test.serverConfig(serverConfig)
 			}
 			serverConfig.GetConfigForClient = func(hello *ClientHelloInfo) (*Config, error) {
-				expectClient := slices.Clone(test.expectClient)
-				if !slices.Equal(hello.SupportedCurves, expectClient) {
+				expectClient := slicesClone(test.expectClient)
+				if !slicesEqual(hello.SupportedCurves, expectClient) {
 					t.Errorf("got client curves %v, expected %v", hello.SupportedCurves, expectClient)
 				}
 				return nil, nil

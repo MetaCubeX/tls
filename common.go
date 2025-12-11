@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -1171,8 +1170,8 @@ func (c *Config) cipherSuites(aesGCMPreferred bool) []uint16 {
 		cipherSuites = defaultCipherSuites(aesGCMPreferred)
 	} else {
 		cipherSuites = supportedCipherSuites(aesGCMPreferred)
-		cipherSuites = slices.DeleteFunc(cipherSuites, func(id uint16) bool {
-			return !slices.Contains(c.CipherSuites, id)
+		cipherSuites = slicesDeleteFunc(cipherSuites, func(id uint16) bool {
+			return !slicesContains(c.CipherSuites, id)
 		})
 	}
 	return cipherSuites
@@ -1245,18 +1244,18 @@ func supportedVersionsFromMax(maxVersion uint16) []uint16 {
 func (c *Config) curvePreferences(version uint16) []CurveID {
 	curvePreferences := defaultCurvePreferences()
 	if c != nil && len(c.CurvePreferences) != 0 {
-		curvePreferences = slices.DeleteFunc(curvePreferences, func(x CurveID) bool {
-			return !slices.Contains(c.CurvePreferences, x)
+		curvePreferences = slicesDeleteFunc(curvePreferences, func(x CurveID) bool {
+			return !slicesContains(c.CurvePreferences, x)
 		})
 	}
 	if version < VersionTLS13 {
-		curvePreferences = slices.DeleteFunc(curvePreferences, isTLS13OnlyKeyExchange)
+		curvePreferences = slicesDeleteFunc(curvePreferences, isTLS13OnlyKeyExchange)
 	}
 	return curvePreferences
 }
 
 func (c *Config) supportsCurve(version uint16, curve CurveID) bool {
-	return slices.Contains(c.curvePreferences(version), curve)
+	return slicesContains(c.curvePreferences(version), curve)
 }
 
 // mutualVersion returns the protocol version to use given the advertised
@@ -1264,7 +1263,7 @@ func (c *Config) supportsCurve(version uint16, curve CurveID) bool {
 func (c *Config) mutualVersion(isClient bool, peerVersions []uint16) (uint16, bool) {
 	supportedVersions := c.supportedVersions(isClient)
 	for _, v := range supportedVersions {
-		if slices.Contains(peerVersions, v) {
+		if slicesContains(peerVersions, v) {
 			return v, true
 		}
 	}
@@ -1722,9 +1721,9 @@ var testingOnlySupportedSignatureAlgorithms []SignatureScheme
 func supportedSignatureAlgorithms(minVers uint16) []SignatureScheme {
 	sigAlgs := defaultSupportedSignatureAlgorithms()
 	if testingOnlySupportedSignatureAlgorithms != nil {
-		sigAlgs = slices.Clone(testingOnlySupportedSignatureAlgorithms)
+		sigAlgs = slicesClone(testingOnlySupportedSignatureAlgorithms)
 	}
-	return slices.DeleteFunc(sigAlgs, func(s SignatureScheme) bool {
+	return slicesDeleteFunc(sigAlgs, func(s SignatureScheme) bool {
 		return isDisabledSignatureAlgorithm(minVers, s, false)
 	})
 }
@@ -1761,13 +1760,13 @@ func isDisabledSignatureAlgorithm(version uint16, s SignatureScheme, isCert bool
 // signatures in certificates.
 func supportedSignatureAlgorithmsCert() []SignatureScheme {
 	sigAlgs := defaultSupportedSignatureAlgorithms()
-	return slices.DeleteFunc(sigAlgs, func(s SignatureScheme) bool {
+	return slicesDeleteFunc(sigAlgs, func(s SignatureScheme) bool {
 		return isDisabledSignatureAlgorithm(0, s, true)
 	})
 }
 
 func isSupportedSignatureAlgorithm(sigAlg SignatureScheme, supportedSignatureAlgorithms []SignatureScheme) bool {
-	return slices.Contains(supportedSignatureAlgorithms, sigAlg)
+	return slicesContains(supportedSignatureAlgorithms, sigAlg)
 }
 
 // CertificateVerificationError is returned when certificate verification fails during the handshake.

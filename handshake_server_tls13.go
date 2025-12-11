@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"slices"
 	"sort"
 	"time"
 
@@ -202,8 +201,8 @@ func (hs *serverHandshakeStateTLS13) processClientHello() error {
 	//
 	// Finally, pick in our fixed preference order.
 	preferredGroups := c.config.curvePreferences(c.vers)
-	preferredGroups = slices.DeleteFunc(preferredGroups, func(group CurveID) bool {
-		return !slices.Contains(hs.clientHello.supportedCurves, group)
+	preferredGroups = slicesDeleteFunc(preferredGroups, func(group CurveID) bool {
+		return !slicesContains(hs.clientHello.supportedCurves, group)
 	})
 	if len(preferredGroups) == 0 {
 		c.sendAlert(alertHandshakeFailure)
@@ -934,7 +933,7 @@ func (hs *serverHandshakeStateTLS13) shouldSendSessionTickets() bool {
 	}
 
 	// Don't send tickets the client wouldn't use. See RFC 8446, Section 4.2.9.
-	return slices.Contains(hs.clientHello.pskModes, pskModeDHE)
+	return slicesContains(hs.clientHello.pskModes, pskModeDHE)
 }
 
 func (hs *serverHandshakeStateTLS13) sendSessionTickets() error {

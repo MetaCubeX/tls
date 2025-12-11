@@ -18,7 +18,6 @@ import (
 	"hash"
 	"io"
 	"net"
-	"slices"
 	"strings"
 	"time"
 
@@ -93,7 +92,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCli
 	hello.cipherSuites = config.cipherSuites(hasAESGCMHardwareSupport)
 	// Don't advertise TLS 1.2-only cipher suites unless we're attempting TLS 1.2.
 	if maxVersion < VersionTLS12 {
-		hello.cipherSuites = slices.DeleteFunc(hello.cipherSuites, func(id uint16) bool {
+		hello.cipherSuites = slicesDeleteFunc(hello.cipherSuites, func(id uint16) bool {
 			return cipherSuiteByID(id).flags&suiteTLS12 != 0
 		})
 	}
@@ -149,7 +148,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCli
 			return nil, nil, nil, err
 		}
 		// Only send the fallback ECDH share if the corresponding CurveID is enabled.
-		if len(hello.keyShares) == 2 && !slices.Contains(hello.supportedCurves, hello.keyShares[1].group) {
+		if len(hello.keyShares) == 2 && !slicesContains(hello.supportedCurves, hello.keyShares[1].group) {
 			hello.keyShares = hello.keyShares[:1]
 		}
 	}
