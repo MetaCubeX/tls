@@ -11,8 +11,6 @@ import (
 	"strings"
 	"testing"
 	"unicode"
-
-	"github.com/metacubex/tls/internal/tls13"
 )
 
 func TestACVPVectors(t *testing.T) {
@@ -38,14 +36,14 @@ func TestACVPVectors(t *testing.T) {
 	// the hash in sequence to develop the transcript.
 	transcript := sha256.New()
 
-	es := tls13.NewEarlySecret(sha256.New, psk)
+	es := tls13NewEarlySecret(sha256.New, psk)
 
 	transcript.Write(helloClientRandom)
 
 	if got := es.ClientEarlyTrafficSecret(transcript); !bytes.Equal(got, clientEarlyTrafficSecret) {
 		t.Errorf("clientEarlyTrafficSecret = %x, want %x", got, clientEarlyTrafficSecret)
 	}
-	if got := tls13.TestingOnlyExporterSecret(es.EarlyExporterMasterSecret(transcript)); !bytes.Equal(got, earlyExporterMasterSecret) {
+	if got := tls13TestingOnlyExporterSecret(es.EarlyExporterMasterSecret(transcript)); !bytes.Equal(got, earlyExporterMasterSecret) {
 		t.Errorf("earlyExporterMasterSecret = %x, want %x", got, earlyExporterMasterSecret)
 	}
 
@@ -70,7 +68,7 @@ func TestACVPVectors(t *testing.T) {
 	if got := ms.ServerApplicationTrafficSecret(transcript); !bytes.Equal(got, serverApplicationTrafficSecret) {
 		t.Errorf("serverApplicationTrafficSecret = %x, want %x", got, serverApplicationTrafficSecret)
 	}
-	if got := tls13.TestingOnlyExporterSecret(ms.ExporterMasterSecret(transcript)); !bytes.Equal(got, exporterMasterSecret) {
+	if got := tls13TestingOnlyExporterSecret(ms.ExporterMasterSecret(transcript)); !bytes.Equal(got, exporterMasterSecret) {
 		t.Errorf("exporterMasterSecret = %x, want %x", got, exporterMasterSecret)
 	}
 
