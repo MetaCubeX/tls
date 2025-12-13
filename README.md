@@ -1,4 +1,5 @@
 # TLS
+[![Go Reference](https://pkg.go.dev/badge/github.com/metacubex/tls.svg)](https://pkg.go.dev/github.com/metacubex/tls)
 
 backport tls for go1.20+
 
