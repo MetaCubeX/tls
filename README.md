@@ -4,4 +4,4 @@
 backport tls for go1.20+
 
 export `crypto/tls` from:
-https://github.com/golang/go/tree/a70addd3b31ccb685f48867e24c6c2b4dc364a11/src/crypto/tls
+https://github.com/golang/go/tree/5046bdf8a612b35a2c1a9e168054c1d5c65e7dd7/src/crypto/tls
