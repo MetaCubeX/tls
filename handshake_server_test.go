@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"os"
 	"os/exec"
@@ -2158,6 +2159,7 @@ func testHandshakeChainExpiryResumption(t *testing.T, version uint16) {
 			IsCA:                  true,
 			BasicConstraintsValid: true,
 		}
+		tmpl.SerialNumber = big.NewInt(1) // for old version golang
 		rootDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 		if err != nil {
 			t.Fatalf("CreateCertificate: %v", err)
@@ -2174,6 +2176,7 @@ func testHandshakeChainExpiryResumption(t *testing.T, version uint16) {
 			NotAfter:  leafNotAfter,
 			KeyUsage:  x509.KeyUsageDigitalSignature,
 		}
+		tmpl.SerialNumber = big.NewInt(1) // for old version golang
 		certDER, err = x509.CreateCertificate(rand.Reader, tmpl, root, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 		if err != nil {
 			t.Fatalf("CreateCertificate: %v", err)
