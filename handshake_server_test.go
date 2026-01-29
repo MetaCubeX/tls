@@ -17,6 +17,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/big"
 	"net"
 	"os"
 	"os/exec"
@@ -2159,6 +2160,7 @@ func testHandshakeChainExpiryResumption(t *testing.T, version uint16) {
 			IsCA:                  true,
 			BasicConstraintsValid: true,
 		}
+		tmpl.SerialNumber = big.NewInt(1) // for old version golang
 		rootDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 		if err != nil {
 			t.Fatalf("CreateCertificate: %v", err)
@@ -2175,6 +2177,7 @@ func testHandshakeChainExpiryResumption(t *testing.T, version uint16) {
 			NotAfter:  leafNotAfter,
 			KeyUsage:  x509.KeyUsageDigitalSignature,
 		}
+		tmpl.SerialNumber = big.NewInt(1) // for old version golang
 		leafCertDER, err := x509.CreateCertificate(rand.Reader, tmpl, root, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 		if err != nil {
 			t.Fatalf("CreateCertificate: %v", err)
@@ -2282,6 +2285,7 @@ func testHandshakeGetConfigForClientDifferentClientCAs(t *testing.T, version uin
 		IsCA:                  true,
 		BasicConstraintsValid: true,
 	}
+	tmpl.SerialNumber = big.NewInt(1) // for old version golang
 	rootDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 	if err != nil {
 		t.Fatalf("CreateCertificate: %v", err)
@@ -2306,6 +2310,7 @@ func testHandshakeGetConfigForClientDifferentClientCAs(t *testing.T, version uin
 		NotAfter:  now.Add(time.Hour * 24),
 		KeyUsage:  x509.KeyUsageDigitalSignature,
 	}
+	tmpl.SerialNumber = big.NewInt(1) // for old version golang
 	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, rootA, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 	if err != nil {
 		t.Fatalf("CreateCertificate: %v", err)
@@ -2394,6 +2399,7 @@ func testHandshakeChangeRootCAsResumption(t *testing.T, version uint16) {
 		IsCA:                  true,
 		BasicConstraintsValid: true,
 	}
+	tmpl.SerialNumber = big.NewInt(1) // for old version golang
 	rootDER, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 	if err != nil {
 		t.Fatalf("CreateCertificate: %v", err)
@@ -2418,6 +2424,7 @@ func testHandshakeChangeRootCAsResumption(t *testing.T, version uint16) {
 		NotAfter:  now.Add(time.Hour * 24),
 		KeyUsage:  x509.KeyUsageDigitalSignature,
 	}
+	tmpl.SerialNumber = big.NewInt(1) // for old version golang
 	certDER, err := x509.CreateCertificate(rand.Reader, tmpl, rootA, &testECDSAPrivateKey.PublicKey, testECDSAPrivateKey)
 	if err != nil {
 		t.Fatalf("CreateCertificate: %v", err)
