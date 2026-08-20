@@ -6,7 +6,7 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"crypto/mldsa"
+	"github.com/metacubex/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"

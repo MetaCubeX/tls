@@ -12,7 +12,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/fips140"
-	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -32,6 +31,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/metacubex/mldsa"
 	"golang.org/x/crypto/cryptobyte"
 )
 

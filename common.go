@@ -13,7 +13,6 @@ import (
 	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/fips140"
-	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
@@ -28,6 +27,8 @@ import (
 	"sync"
 	"time"
 	_ "unsafe" // for linkname
+
+	"github.com/metacubex/mldsa"
 )
 
 const (

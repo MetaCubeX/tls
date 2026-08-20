@@ -9,7 +9,6 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/subtle"
 	"crypto/x509"
@@ -18,6 +17,8 @@ import (
 	"hash"
 	"io"
 	"time"
+
+	"github.com/metacubex/mldsa"
 )
 
 // serverHandshakeState contains details of a server handshake in progress.

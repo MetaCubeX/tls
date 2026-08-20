@@ -10,7 +10,6 @@ import (
 	"crypto"
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/subtle"
 	"crypto/x509"
@@ -24,6 +23,7 @@ import (
 	"time"
 
 	"github.com/metacubex/hpke"
+	"github.com/metacubex/mldsa"
 )
 
 type clientHandshakeState struct {

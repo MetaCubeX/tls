@@ -10,13 +10,14 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
-	"crypto/mldsa"
 	"crypto/rsa"
 	"errors"
 	"fmt"
 	"hash"
 	"io"
 	"slices"
+
+	"github.com/metacubex/mldsa"
 )
 
 // verifyHandshakeSignature verifies a signature against unhashed handshake contents.

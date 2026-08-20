@@ -7,9 +7,10 @@ package tls
 import (
 	"crypto"
 	"crypto/fips140"
-	"crypto/mldsa"
 	"strconv"
 	"testing"
+
+	"github.com/metacubex/mldsa"
 )
 
 func TestSignatureSelection(t *testing.T) {

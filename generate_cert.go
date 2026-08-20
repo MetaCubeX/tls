@@ -13,7 +13,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
-	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -26,6 +25,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/metacubex/mldsa"
 )
 
 var (
