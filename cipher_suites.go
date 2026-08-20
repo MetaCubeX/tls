@@ -10,8 +10,6 @@ import (
 	"crypto/cipher"
 	"crypto/des"
 	"crypto/hmac"
-	fipsaes "crypto/internal/fips140/aes"
-	"crypto/internal/fips140/aes/gcm"
 	"crypto/rc4"
 	"crypto/sha1"
 	"crypto/sha256"
@@ -510,7 +508,7 @@ func aeadAESGCM(key, noncePrefix []byte) aead {
 		panic(err)
 	}
 	var aead cipher.AEAD
-	aead, err = gcm.NewGCMForTLS12(aes.(*fipsaes.Block))
+	aead, err = cipher.NewGCM(aes)
 	if err != nil {
 		panic(err)
 	}
@@ -539,7 +537,7 @@ func aeadAESGCMTLS13(key, nonceMask []byte) aead {
 		panic(err)
 	}
 	var aead cipher.AEAD
-	aead, err = gcm.NewGCMForTLS13(aes.(*fipsaes.Block))
+	aead, err = cipher.NewGCM(aes)
 	if err != nil {
 		panic(err)
 	}
