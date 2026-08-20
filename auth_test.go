@@ -9,7 +9,6 @@ import (
 	"crypto/fips140"
 	"crypto/internal/cryptotest"
 	"crypto/mldsa"
-	"crypto/tls/internal/fips140tls"
 	"internal/testenv"
 	"strconv"
 	"testing"
@@ -56,9 +55,6 @@ func TestSignatureSelection(t *testing.T) {
 
 	for testNo, test := range tests {
 		t.Run(strconv.Itoa(testNo), func(t *testing.T) {
-			if fips140tls.Required() && test.expectedHash == crypto.SHA1 {
-				t.Skip("skipping test not compatible with TLS FIPS mode")
-			}
 			switch test.expectedSigAlg {
 			case MLDSA44, MLDSA65, MLDSA87:
 				cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")

@@ -15,7 +15,6 @@ import (
 	"crypto/internal/cryptotest"
 	"crypto/mldsa"
 	"crypto/rand"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
@@ -203,46 +202,7 @@ func newLocalListener(t testing.TB) net.Listener {
 	return ln
 }
 
-func runWithFIPSEnabled(t *testing.T, testFunc func(t *testing.T)) {
-	originalFIPS := fips140tls.Required()
-	defer func() {
-		if originalFIPS {
-			fips140tls.Force()
-		} else {
-			fips140tls.TestingOnlyAbandon()
-		}
-	}()
-
-	fips140tls.Force()
-	t.Run("fips140tls", testFunc)
-}
-
-func runWithFIPSDisabled(t *testing.T, testFunc func(t *testing.T)) {
-	if fips140.Enforced() {
-		t.Run("no-fips140tls", func(t *testing.T) {
-			t.Skip("can't run no-fips140tls tests in fips140=only mode")
-		})
-		return
-	}
-
-	originalFIPS := fips140tls.Required()
-	defer func() {
-		if originalFIPS {
-			fips140tls.Force()
-		} else {
-			fips140tls.TestingOnlyAbandon()
-		}
-	}()
-
-	fips140tls.TestingOnlyAbandon()
-	t.Run("no-fips140tls", testFunc)
-}
-
-func skipFIPS(t *testing.T) {
-	if fips140tls.Required() {
-		t.Skip("skipping test in FIPS mode")
-	}
-}
+func skipFIPS(t *testing.T) {}
 
 func TestDialTimeout(t *testing.T) {
 	if testing.Short() {
@@ -1353,9 +1313,6 @@ func TestConnectionState(t *testing.T) {
 	}
 
 	for _, v := range []uint16{VersionTLS10, VersionTLS12, VersionTLS13} {
-		if !isFIPSVersion(v) && fips140tls.Required() {
-			t.Skipf("skipping test in FIPS 140-3 mode for non-FIPS version %x", v)
-		}
 		var name string
 		switch v {
 		case VersionTLS10:
@@ -2229,9 +2186,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 	baseClientConfig := testConfigClient.Clone()
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if fips140tls.Required() && test.expectSelected == X25519 {
-				t.Skip("X25519 not supported in FIPS mode")
-			}
 			if test.preparation != nil {
 				test.preparation(t)
 			} else {
@@ -2243,9 +2197,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 			}
 			serverConfig.GetConfigForClient = func(hello *ClientHelloInfo) (*Config, error) {
 				expectClient := slices.Clone(test.expectClient)
-				expectClient = slices.DeleteFunc(expectClient, func(c CurveID) bool {
-					return fips140tls.Required() && c == X25519
-				})
 				if !slices.Equal(hello.SupportedCurves, expectClient) {
 					t.Errorf("got client curves %v, expected %v", hello.SupportedCurves, expectClient)
 				}

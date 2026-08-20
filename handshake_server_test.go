@@ -12,7 +12,6 @@ import (
 	"crypto/elliptic"
 	internalrand "crypto/internal/rand"
 	"crypto/rand"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
@@ -337,11 +336,6 @@ func TestTLSPointFormats(t *testing.T) {
 		{"RSA with ec_point_format", []uint16{TLS_RSA_WITH_AES_256_GCM_SHA384}, nil, []uint8{pointFormatUncompressed}, false},
 	}
 	for _, tt := range tests {
-		// The RSA subtests should be enabled for FIPS 140 required mode: #70505
-		if strings.HasPrefix(tt.name, "RSA") && fips140tls.Required() {
-			t.Logf("skipping in FIPS mode.")
-			continue
-		}
 		t.Run(tt.name, func(t *testing.T) {
 			clientHello := &clientHelloMsg{
 				vers:               VersionTLS12,

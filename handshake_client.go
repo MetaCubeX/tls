@@ -15,7 +15,6 @@ import (
 	"crypto/mldsa"
 	"crypto/rsa"
 	"crypto/subtle"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -131,9 +130,7 @@ func (c *Conn) makeClientHello() (*clientHelloMsg, *keySharePrivateKeys, *echCli
 			hello.cipherSuites = nil
 		}
 
-		if fips140tls.Required() {
-			hello.cipherSuites = append(hello.cipherSuites, allowedCipherSuitesTLS13FIPS...)
-		} else if hasAESGCMHardwareSupport {
+		if hasAESGCMHardwareSupport {
 			hello.cipherSuites = append(hello.cipherSuites, defaultCipherSuitesTLS13...)
 		} else {
 			hello.cipherSuites = append(hello.cipherSuites, defaultCipherSuitesTLS13NoAES...)
@@ -434,14 +431,6 @@ func (c *Conn) loadSession(hello *clientHelloMsg) (
 		// are still offering it.
 		if mutualCipherSuite(hello.cipherSuites, session.cipherSuite) == nil {
 			return nil, nil, nil, nil
-		}
-
-		// FIPS 140-3 requires the use of Extended Master Secret.
-		if !session.extMasterSecret && fips140tls.Required() {
-			if fips140ems.Value() != "0" {
-				return nil, nil, nil, nil
-			}
-			fips140ems.IncNonDefault()
 		}
 
 		hello.sessionTicket = session.ticket
@@ -772,13 +761,6 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		hs.masterSecret = extMasterFromPreMasterSecret(c.vers, hs.suite, preMasterSecret,
 			hs.finishedHash.Sum())
 	} else {
-		if fips140tls.Required() {
-			if fips140ems.Value() != "0" {
-				c.sendAlert(alertHandshakeFailure)
-				return errors.New("tls: FIPS 140-3 requires the use of Extended Master Secret")
-			}
-			fips140ems.IncNonDefault()
-		}
 		hs.masterSecret = masterFromPreMasterSecret(c.vers, hs.suite, preMasterSecret,
 			hs.hello.random, hs.serverHello.random)
 	}

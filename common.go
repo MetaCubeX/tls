@@ -17,7 +17,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
-	"crypto/tls/internal/fips140tls"
 	"crypto/x509"
 	"errors"
 	"fmt"
@@ -1202,11 +1201,6 @@ func (c *Config) cipherSuites(aesGCMPreferred bool) []uint16 {
 			return !slices.Contains(c.CipherSuites, id)
 		})
 	}
-	if fips140tls.Required() {
-		cipherSuites = slices.DeleteFunc(cipherSuites, func(id uint16) bool {
-			return !slices.Contains(allowedCipherSuitesFIPS, id)
-		})
-	}
 	return cipherSuites
 }
 
@@ -1233,9 +1227,6 @@ const roleServer = false
 func (c *Config) supportedVersions(isClient, isQUIC bool) []uint16 {
 	versions := make([]uint16, 0, len(supportedVersions))
 	for _, v := range supportedVersions {
-		if fips140tls.Required() && !slices.Contains(allowedSupportedVersionsFIPS, v) {
-			continue
-		}
 		if (c == nil || c.MinVersion == 0) && v < VersionTLS12 {
 			continue
 		}
@@ -1297,9 +1288,6 @@ func (c *Config) supportsCurve(version uint16, x CurveID) bool {
 		if !defaultCurveEnabled(x) {
 			return false
 		}
-	}
-	if fips140tls.Required() && !slices.Contains(allowedCurvePreferencesFIPS, x) {
-		return false
 	}
 	if version < VersionTLS13 && isTLS13OnlyKeyExchange(x) {
 		return false
@@ -1792,10 +1780,6 @@ func supportedSignatureAlgorithms(minVers, maxVers uint16) []SignatureScheme {
 var tlssha1 = godebug.New("tlssha1")
 
 func isDisabledSignatureAlgorithm(version uint16, s SignatureScheme, isCert bool) bool {
-	if fips140tls.Required() && !slices.Contains(allowedSignatureAlgorithmsFIPS, s) {
-		return true
-	}
-
 	switch s {
 	case MLDSA44, MLDSA65, MLDSA87:
 		// ML-DSA is not available in FIPS 140-3 module v1.0.0.
@@ -1869,42 +1853,8 @@ func (e *CertificateVerificationError) Unwrap() error {
 }
 
 // fipsAllowedChains returns chains that are allowed to be used in a TLS connection
-// based on the current fips140tls enforcement setting.
-//
-// If fips140tls is not required, the chains are returned as-is with no processing.
-// Otherwise, the returned chains are filtered to only those allowed by FIPS 140-3.
-// If this results in no chains it returns an error.
 func fipsAllowedChains(chains [][]*x509.Certificate) ([][]*x509.Certificate, error) {
-	if !fips140tls.Required() {
-		return chains, nil
-	}
-
-	permittedChains := make([][]*x509.Certificate, 0, len(chains))
-	for _, chain := range chains {
-		if fipsAllowChain(chain) {
-			permittedChains = append(permittedChains, chain)
-		}
-	}
-
-	if len(permittedChains) == 0 {
-		return nil, errors.New("tls: no FIPS compatible certificate chains found")
-	}
-
-	return permittedChains, nil
-}
-
-func fipsAllowChain(chain []*x509.Certificate) bool {
-	if len(chain) == 0 {
-		return false
-	}
-
-	for _, cert := range chain {
-		if !isCertificateAllowedFIPS(cert) {
-			return false
-		}
-	}
-
-	return true
+	return chains, nil
 }
 
 // anyValidVerifiedChain reports if at least one of the chains in verifiedChains

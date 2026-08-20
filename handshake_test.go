@@ -446,7 +446,6 @@ func runMain(m *testing.M) int {
 		}
 		testConfigClient.KeyLogWriter = f
 		testConfigServer.KeyLogWriter = f
-		testConfigFIPS140.KeyLogWriter = f
 		defer f.Close()
 	}
 
