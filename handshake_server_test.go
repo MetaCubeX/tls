@@ -9,8 +9,6 @@ import (
 	"context"
 	"crypto"
 	"crypto/ecdh"
-	"crypto/elliptic"
-	internalrand "crypto/internal/rand"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -1397,105 +1395,6 @@ func TestHandshakeServerEd25519(t *testing.T) {
 	}
 	runServerTestTLS12(t, test)
 	runServerTestTLS13(t, test)
-}
-
-// zeroSource is an io.Reader that returns an unlimited number of zero bytes.
-type zeroSource struct{}
-
-func (zeroSource) Read(b []byte) (n int, err error) {
-	clear(b)
-	return len(b), nil
-}
-
-func benchmarkHandshakeServer(b *testing.B, version uint16, cipherSuite uint16, curve CurveID, cert []byte, key crypto.PrivateKey) {
-	config := testConfigServer.Clone()
-
-	// cryptotest.SetGlobalRandom does not support *testing.B
-	internalrand.SetTestingReader(zeroSource{})
-	defer internalrand.SetTestingReader(nil)
-
-	config.CipherSuites = []uint16{cipherSuite}
-	config.CurvePreferences = []CurveID{curve}
-	config.Certificates = make([]Certificate, 1)
-	config.Certificates[0].Certificate = [][]byte{cert}
-	config.Certificates[0].PrivateKey = key
-	config.BuildNameToCertificate()
-
-	clientConn, serverConn := localPipe(b)
-	serverConn = &recordingConn{Conn: serverConn}
-	go func() {
-		config := testConfigClient.Clone()
-		config.MaxVersion = version
-		config.CipherSuites = []uint16{cipherSuite}
-		config.CurvePreferences = []CurveID{curve}
-		client := Client(clientConn, config)
-		client.Handshake()
-	}()
-	server := Server(serverConn, config)
-	if err := server.Handshake(); err != nil {
-		b.Fatalf("handshake failed: %v", err)
-	}
-	serverConn.Close()
-	flows := serverConn.(*recordingConn).flows
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		replay := &replayingConn{t: b, flows: slices.Clone(flows), reading: true}
-		server := Server(replay, config)
-		if err := server.Handshake(); err != nil {
-			b.Fatalf("handshake failed: %v", err)
-		}
-	}
-}
-
-func BenchmarkHandshakeServer(b *testing.B) {
-	b.Run("RSA", func(b *testing.B) {
-		benchmarkHandshakeServer(b, VersionTLS12, TLS_RSA_WITH_AES_128_GCM_SHA256,
-			0, testRSA2048Cert.Certificate[0], testRSA2048Key)
-	})
-	b.Run("ECDHE-P256-RSA", func(b *testing.B) {
-		b.Run("TLSv13", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS13, TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP256, testRSA2048Cert.Certificate[0], testRSA2048Key)
-		})
-		b.Run("TLSv12", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS12, TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP256, testRSA2048Cert.Certificate[0], testRSA2048Key)
-		})
-	})
-	b.Run("ECDHE-P256-ECDSA-P256", func(b *testing.B) {
-		b.Run("TLSv13", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS13, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP256, testECDSAP256Cert.Certificate[0], testECDSAP256Key)
-		})
-		b.Run("TLSv12", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS12, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP256, testECDSAP256Cert.Certificate[0], testECDSAP256Key)
-		})
-	})
-	b.Run("ECDHE-X25519-ECDSA-P256", func(b *testing.B) {
-		b.Run("TLSv13", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS13, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				X25519, testECDSAP256Cert.Certificate[0], testECDSAP256Key)
-		})
-		b.Run("TLSv12", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS12, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				X25519, testECDSAP256Cert.Certificate[0], testECDSAP256Key)
-		})
-	})
-	b.Run("ECDHE-P521-ECDSA-P521", func(b *testing.B) {
-		if testECDSAP521Key.PublicKey.Curve != elliptic.P521() {
-			b.Fatal("test ECDSA key doesn't use curve P-521")
-		}
-		b.Run("TLSv13", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS13, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP521, testECDSAP521Cert.Certificate[0], testECDSAP521Key)
-		})
-		b.Run("TLSv12", func(b *testing.B) {
-			benchmarkHandshakeServer(b, VersionTLS12, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,
-				CurveP521, testECDSAP521Cert.Certificate[0], testECDSAP521Key)
-		})
-	})
 }
 
 func TestClientAuth(t *testing.T) {
