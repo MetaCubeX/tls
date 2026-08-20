@@ -396,7 +396,7 @@ func TestAlertForwarding(t *testing.T) {
 
 	err := Server(s, testConfigServer.Clone()).Handshake()
 	s.Close()
-	if opErr, ok := errors.AsType[*net.OpError](err); !ok || opErr.Err != error(alertUnknownCA) {
+	if opErr, ok := errorsAsType[*net.OpError](err); !ok || opErr.Err != error(alertUnknownCA) {
 		t.Errorf("Got error: %s; expected: %s", err, error(alertUnknownCA))
 	}
 }
