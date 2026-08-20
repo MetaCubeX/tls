@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"internal/godebug"
 	"io"
 	"net"
 	"runtime"
@@ -1777,8 +1776,6 @@ func supportedSignatureAlgorithms(minVers, maxVers uint16) []SignatureScheme {
 	})
 }
 
-var tlssha1 = godebug.New("tlssha1")
-
 func isDisabledSignatureAlgorithm(version uint16, s SignatureScheme, isCert bool) bool {
 	switch s {
 	case MLDSA44, MLDSA65, MLDSA87:
@@ -1809,7 +1806,7 @@ func isDisabledSignatureAlgorithm(version uint16, s SignatureScheme, isCert bool
 		if sigType == signaturePKCS1v15 || sigHash == crypto.SHA1 {
 			return true
 		}
-	} else if tlssha1.Value() != "1" {
+	} else {
 		_, sigHash, _ := typeAndHashFromSignatureScheme(s)
 		if sigHash == crypto.SHA1 {
 			return true

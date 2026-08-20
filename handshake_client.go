@@ -17,11 +17,9 @@ import (
 	"errors"
 	"fmt"
 	"hash"
-	"internal/godebug"
 	"io"
 	"net"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -347,10 +345,6 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 	}
 	return hs.handshake()
 }
-
-// fips140ems is a GODEBUG variable that can be set to 0 to disable the
-// enforcement of Extended Master Secret in FIPS 140-3 mode.
-var fips140ems = godebug.New("fips140ems")
 
 func (c *Conn) loadSession(hello *clientHelloMsg) (
 	session *SessionState, earlySecret *tls13.EarlySecret, binderKey []byte, err error) {
@@ -791,10 +785,6 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 			}
 			certVerify.hasSignatureAlgorithm = true
 			certVerify.signatureAlgorithm = signatureAlgorithm
-			if sigHash == crypto.SHA1 {
-				tlssha1.Value() // ensure godebug is initialized
-				tlssha1.IncNonDefault()
-			}
 			if hs.finishedHash.buffer == nil {
 				c.sendAlert(alertInternalError)
 				return errors.New("tls: internal error: did not keep handshake transcript for TLS 1.2")
@@ -1069,17 +1059,7 @@ func (hs *clientHandshakeState) sendFinished(out []byte) error {
 // to verify the signatures of during a TLS handshake.
 const defaultMaxRSAKeySize = 8192
 
-var tlsmaxrsasize = godebug.New("tlsmaxrsasize")
-
 func checkKeySize(n int) (max int, ok bool) {
-	if v := tlsmaxrsasize.Value(); v != "" {
-		if max, err := strconv.Atoi(v); err == nil {
-			if (n <= max) != (n <= defaultMaxRSAKeySize) {
-				tlsmaxrsasize.IncNonDefault()
-			}
-			return max, n <= max
-		}
-	}
 	return defaultMaxRSAKeySize, n <= defaultMaxRSAKeySize
 }
 

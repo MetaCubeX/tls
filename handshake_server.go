@@ -769,10 +769,6 @@ func (hs *serverHandshakeState) doFullHandshake() error {
 			if err != nil {
 				return c.sendAlert(alertInternalError)
 			}
-			if sigHash == crypto.SHA1 {
-				tlssha1.Value() // ensure godebug is initialized
-				tlssha1.IncNonDefault()
-			}
 			if hs.finishedHash.buffer == nil {
 				c.sendAlert(alertInternalError)
 				return errors.New("tls: internal error: did not keep handshake transcript for TLS 1.2")
