@@ -21,7 +21,6 @@ import (
 	"strings"
 	"sync"
 	"testing"
-	"testing/cryptotest"
 	"time"
 )
 
@@ -50,13 +49,13 @@ func runTestAndUpdateIfNeeded(t *testing.T, name string, run func(t *testing.T, 
 	skipFIPS(t) // FIPS 140-3 mode changes the advertised parameters.
 
 	success := t.Run(name, func(t *testing.T) {
-		cryptotest.SetGlobalRandom(t, 0)
+		setGlobalRandom(t, 0)
 		run(t, false)
 	})
 
 	if !success && *update {
 		t.Run(name+"#update", func(t *testing.T) {
-			cryptotest.SetGlobalRandom(t, 0)
+			setGlobalRandom(t, 0)
 			run(t, true)
 		})
 	}
