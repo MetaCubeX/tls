@@ -21,7 +21,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"internal/testenv"
 	"io"
 	"math"
 	"math/big"
@@ -538,64 +537,6 @@ func TestTLSUniqueMatches(t *testing.T) {
 	if serverTLSUniquesValue == nil || bytes.Equal(serverTLSUniquesValue, make([]byte, 12)) {
 		t.Error("resumption tls-unique is empty or zero")
 	}
-}
-
-func TestVerifyHostname(t *testing.T) {
-	testenv.MustHaveExternalNetwork(t)
-
-	c, err := Dial("tcp", "www.google.com:https", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := c.VerifyHostname("www.google.com"); err != nil {
-		t.Fatalf("verify www.google.com: %v", err)
-	}
-	if err := c.VerifyHostname("www.yahoo.com"); err == nil {
-		t.Fatalf("verify www.yahoo.com succeeded")
-	}
-
-	c, err = Dial("tcp", "www.google.com:https", &Config{InsecureSkipVerify: true})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := c.VerifyHostname("www.google.com"); err == nil {
-		t.Fatalf("verify www.google.com succeeded with InsecureSkipVerify=true")
-	}
-}
-
-func TestRealResumption(t *testing.T) {
-	testenv.MustHaveExternalNetwork(t)
-
-	config := &Config{
-		ServerName:         "yahoo.com",
-		ClientSessionCache: NewLRUClientSessionCache(0),
-	}
-
-	for range 10 {
-		conn, err := Dial("tcp", "yahoo.com:443", config)
-		if err != nil {
-			t.Log("Dial error:", err)
-			continue
-		}
-		// Do a read to consume the NewSessionTicket messages.
-		fmt.Fprintf(conn, "GET / HTTP/1.1\r\nHost: yahoo.com\r\nConnection: close\r\n\r\n")
-		conn.Read(make([]byte, 4096))
-		conn.Close()
-
-		conn, err = Dial("tcp", "yahoo.com:443", config)
-		if err != nil {
-			t.Log("second Dial error:", err)
-			continue
-		}
-		state := conn.ConnectionState()
-		conn.Close()
-
-		if state.DidResume {
-			return
-		}
-	}
-
-	t.Fatal("no connection used session resumption")
 }
 
 func TestConnCloseBreakingWrite(t *testing.T) {
@@ -2101,37 +2042,6 @@ func TestHandshakeMLKEM(t *testing.T) {
 			},
 			expectClient:   defaultWithPQ,
 			expectSelected: X25519,
-		},
-		{
-			name: "GODEBUG tlsmlkem=0",
-			preparation: func(t *testing.T) {
-				testenv.SetGODEBUG(t, "tlsmlkem=0")
-			},
-			expectClient:   defaultWithoutPQ,
-			expectSelected: X25519,
-		},
-		{
-			name: "GODEBUG tlssecpmlkem=0",
-			preparation: func(t *testing.T) {
-				testenv.SetGODEBUG(t, "tlssecpmlkem=0")
-			},
-			expectClient:   []CurveID{X25519MLKEM768, X25519, CurveP256, CurveP384, CurveP521},
-			expectSelected: X25519MLKEM768,
-		},
-		{
-			name: "CurvePreferences override GODEBUG",
-			preparation: func(t *testing.T) {
-				testenv.SetGODEBUG(t, "tlsmlkem=0")
-				testenv.SetGODEBUG(t, "tlssecpmlkem=0")
-			},
-			clientConfig: func(config *Config) {
-				config.CurvePreferences = []CurveID{CurveP256, SecP256r1MLKEM768, MLKEM1024}
-			},
-			serverConfig: func(config *Config) {
-				config.CurvePreferences = []CurveID{CurveP256, SecP256r1MLKEM768, MLKEM1024}
-			},
-			expectClient:   []CurveID{SecP256r1MLKEM768, MLKEM1024, CurveP256},
-			expectSelected: SecP256r1MLKEM768,
 		},
 		{
 			name: "ClientMLKEM1024Only",

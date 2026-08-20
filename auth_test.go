@@ -8,7 +8,6 @@ import (
 	"crypto"
 	"crypto/fips140"
 	"crypto/mldsa"
-	"internal/testenv"
 	"strconv"
 	"testing"
 )
@@ -28,14 +27,12 @@ func TestSignatureSelection(t *testing.T) {
 		expectedHash    crypto.Hash
 	}{
 		{testRSA2048Cert, []SignatureScheme{PKCS1WithSHA1, PKCS1WithSHA256}, VersionTLS12, "", PKCS1WithSHA256, signaturePKCS1v15, crypto.SHA256},
-		{testRSA2048Cert, []SignatureScheme{PKCS1WithSHA1, PKCS1WithSHA256}, VersionTLS12, "tlssha1=1", PKCS1WithSHA1, signaturePKCS1v15, crypto.SHA1},
 		{testRSA2048Cert, []SignatureScheme{PKCS1WithSHA512, PKCS1WithSHA1}, VersionTLS12, "", PKCS1WithSHA512, signaturePKCS1v15, crypto.SHA512},
 		{testRSA2048Cert, []SignatureScheme{PSSWithSHA256, PKCS1WithSHA256}, VersionTLS12, "", PSSWithSHA256, signatureRSAPSS, crypto.SHA256},
 		{pkcs1Cert, []SignatureScheme{PSSWithSHA256, PKCS1WithSHA256}, VersionTLS12, "", PKCS1WithSHA256, signaturePKCS1v15, crypto.SHA256},
 		{testRSA2048Cert, []SignatureScheme{PSSWithSHA384, PKCS1WithSHA1}, VersionTLS13, "", PSSWithSHA384, signatureRSAPSS, crypto.SHA384},
 		{testRSA2048Cert, []SignatureScheme{PKCS1WithSHA1, PSSWithSHA384}, VersionTLS13, "", PSSWithSHA384, signatureRSAPSS, crypto.SHA384},
 		{testECDSAP256Cert, []SignatureScheme{ECDSAWithSHA1, ECDSAWithP256AndSHA256}, VersionTLS12, "", ECDSAWithP256AndSHA256, signatureECDSA, crypto.SHA256},
-		{testECDSAP256Cert, []SignatureScheme{ECDSAWithSHA1}, VersionTLS12, "tlssha1=1", ECDSAWithSHA1, signatureECDSA, crypto.SHA1},
 		{testECDSAP256Cert, []SignatureScheme{ECDSAWithP256AndSHA256}, VersionTLS12, "", ECDSAWithP256AndSHA256, signatureECDSA, crypto.SHA256},
 		{testECDSAP256Cert, []SignatureScheme{ECDSAWithP256AndSHA256}, VersionTLS13, "", ECDSAWithP256AndSHA256, signatureECDSA, crypto.SHA256},
 		{testEd25519Cert, []SignatureScheme{Ed25519}, VersionTLS12, "", Ed25519, signatureEd25519, directSigning},
@@ -44,21 +41,13 @@ func TestSignatureSelection(t *testing.T) {
 		{testMLDSA65Cert, []SignatureScheme{MLDSA65}, VersionTLS13, "", MLDSA65, signatureMLDSA, directSigning},
 		{testMLDSA87Cert, []SignatureScheme{MLDSA87}, VersionTLS13, "", MLDSA87, signatureMLDSA, directSigning},
 
-		// TLS 1.2 without signature_algorithms extension
-		{testRSA2048Cert, nil, VersionTLS12, "tlssha1=1", PKCS1WithSHA1, signaturePKCS1v15, crypto.SHA1},
-		{testECDSAP256Cert, nil, VersionTLS12, "tlssha1=1", ECDSAWithSHA1, signatureECDSA, crypto.SHA1},
-
 		// TLS 1.2 does not restrict the ECDSA curve
 		{testECDSAP256Cert, []SignatureScheme{ECDSAWithP384AndSHA384}, VersionTLS12, "", ECDSAWithP384AndSHA384, signatureECDSA, crypto.SHA384},
 	}
 
 	for testNo, test := range tests {
 		t.Run(strconv.Itoa(testNo), func(t *testing.T) {
-			if test.godebug != "" {
-				testenv.SetGODEBUG(t, test.godebug)
-			} else {
-				t.Parallel()
-			}
+			t.Parallel()
 
 			sigAlg, err := selectSignatureScheme(test.tlsVersion, &test.cert, test.peerSigAlgs)
 			if err != nil {

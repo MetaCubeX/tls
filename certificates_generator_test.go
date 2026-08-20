@@ -19,7 +19,6 @@ import (
 	"encoding/pem"
 	"flag"
 	"fmt"
-	"internal/testenv"
 	"math/big"
 	"os"
 	"strings"
@@ -31,14 +30,13 @@ import (
 var generate = flag.Bool("generate", false, "regenerate certificates_test.go")
 
 func TestGenerateCertificates(t *testing.T) {
-	testenv.MustHaveSource(t)
 	// The RSA key generation algorithm changed after Go 1.26.0.
 	if testing.Short() && !*generate {
 		t.Skip("set -generate to regenerate certificates_test.go, or run without -short to check")
 	}
 
 	// Allow RSA keys below 1024 bits for testRSA512.
-	testenv.SetGODEBUG(t, "rsa1024min=0")
+	t.Setenv("GODEBUG", "rsa1024min=0")
 
 	cryptotest.SetGlobalRandom(t, 0)
 
