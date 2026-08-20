@@ -6,7 +6,6 @@ package tls
 
 import (
 	"crypto/ecdh"
-	"crypto/fips140"
 	"crypto/hmac"
 	"errors"
 	"hash"
@@ -199,7 +198,7 @@ func (ke *hybridKeyExchange) keyShares(rand io.Reader) (*keySharePrivateKeys, []
 		ecdhShares []keyShare
 		err        error
 	)
-	fips140.WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
+	fips140WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
 		priv, ecdhShares, err = ke.ecdh.keyShares(rand)
 	})
 	if err != nil {
@@ -238,7 +237,7 @@ func (ke *hybridKeyExchange) serverSharedSecret(rand io.Reader, clientKeyShare [
 		ks               keyShare
 		err              error
 	)
-	fips140.WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
+	fips140WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
 		ecdhSharedSecret, ks, err = ke.ecdh.serverSharedSecret(rand, ecdhShareData)
 	})
 	if err != nil {
@@ -277,7 +276,7 @@ func (ke *hybridKeyExchange) clientSharedSecret(priv *keySharePrivateKeys, serve
 		ecdhSharedSecret []byte
 		err              error
 	)
-	fips140.WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
+	fips140WithoutEnforcement(func() { // Hybrid of ML-KEM, which is Approved.
 		ecdhSharedSecret, err = ke.ecdh.clientSharedSecret(priv, ecdhShareData)
 	})
 	if err != nil {

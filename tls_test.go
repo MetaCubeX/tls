@@ -11,7 +11,6 @@ import (
 	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/elliptic"
-	"crypto/fips140"
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
@@ -129,7 +128,7 @@ kohxS/xfFg/TEwRSSws+roJr4JFKpO2t3/be5OdqmQ==
 		{"RSA-untyped", rsaCertPEM, keyPEM}, // golang.org/issue/4477
 	}
 
-	if fips140.Version() != "v1.0.0" {
+	if fips140Version() != "v1.0.0" {
 		keyPairTests = append(keyPairTests,
 			test{"ML-DSA-44", testMLDSA44CertPEM, testingKey(testMLDSA44KeyPEM)},
 			test{"ML-DSA-65", testMLDSA65CertPEM, testingKey(testMLDSA65KeyPEM)},
@@ -2152,7 +2151,7 @@ func TestHandshakeMLKEM(t *testing.T) {
 func TestSupportedSignatureAlgorithmsMLDSAGating(t *testing.T) {
 	mldsaSchemes := []SignatureScheme{MLDSA44, MLDSA65, MLDSA87}
 
-	if fips140.Version() == "v1.0.0" {
+	if fips140Version() == "v1.0.0" {
 		fullRange := supportedSignatureAlgorithms(VersionTLS10, VersionTLS13)
 		certExt := supportedSignatureAlgorithmsCert(VersionTLS10, VersionTLS13)
 		for _, s := range mldsaSchemes {
@@ -2204,7 +2203,7 @@ func TestHandshakeMLDSA(t *testing.T) {
 			serverConfig.Certificates = []Certificate{tt.cert}
 			clientConfig := testConfigClient.Clone()
 			_, cs, err := testHandshake(t, clientConfig, serverConfig)
-			if fips140.Version() == "v1.0.0" {
+			if fips140Version() == "v1.0.0" {
 				if err == nil {
 					t.Errorf("ML-DSA handshake unexpectedly succeeded with FIPS 140-3 module v1.0.0")
 				}
@@ -2233,7 +2232,7 @@ func TestHandshakeMLDSA(t *testing.T) {
 			clientConfig := testConfigClient.Clone()
 			clientConfig.Certificates = []Certificate{tt.client}
 			ss, _, err := testHandshake(t, clientConfig, serverConfig)
-			if fips140.Version() == "v1.0.0" {
+			if fips140Version() == "v1.0.0" {
 				if err == nil {
 					t.Errorf("ML-DSA handshake unexpectedly succeeded with FIPS 140-3 module v1.0.0")
 				}
@@ -2262,7 +2261,7 @@ func TestHandshakeMLDSA(t *testing.T) {
 			clientConfig := testConfigClient.Clone()
 			clientConfig.Certificates = []Certificate{tt.client}
 			ss, cs, err := testHandshake(t, clientConfig, serverConfig)
-			if fips140.Version() == "v1.0.0" {
+			if fips140Version() == "v1.0.0" {
 				if err == nil {
 					t.Errorf("ML-DSA handshake unexpectedly succeeded with FIPS 140-3 module v1.0.0")
 				}
