@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-	"slices"
 
 	"github.com/metacubex/mldsa"
 )
@@ -266,13 +265,13 @@ func selectSignatureScheme(vers uint16, c *Certificate, peerAlgs []SignatureSche
 	}
 	supportedAlgs := signatureSchemesForPublicKey(vers, priv.Public())
 	if c.SupportedSignatureAlgorithms != nil {
-		supportedAlgs = slices.DeleteFunc(supportedAlgs, func(sigAlg SignatureScheme) bool {
+		supportedAlgs = slicesDeleteFunc(supportedAlgs, func(sigAlg SignatureScheme) bool {
 			return !isSupportedSignatureAlgorithm(sigAlg, c.SupportedSignatureAlgorithms)
 		})
 	}
 	// Filter out any unsupported signature algorithms, for example due to
 	// FIPS 140-3 policy, tlssha1=0, or protocol version.
-	supportedAlgs = slices.DeleteFunc(supportedAlgs, func(sigAlg SignatureScheme) bool {
+	supportedAlgs = slicesDeleteFunc(supportedAlgs, func(sigAlg SignatureScheme) bool {
 		return isDisabledSignatureAlgorithm(vers, sigAlg, false)
 	})
 	if len(supportedAlgs) == 0 {

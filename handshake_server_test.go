@@ -21,7 +21,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -1083,8 +1082,8 @@ func checkServerName(want string) func(ConnectionState) error {
 // matches a later certificate in Config.Certificates. The test verifies that
 // the server correctly selects that certificate.
 func TestHandshakeServerSNI(t *testing.T) {
-	command := slices.Clone(defaultClientCommand)
-	command[slices.Index(command, "-servername")+1] = "different.example.com"
+	command := slicesClone(defaultClientCommand)
+	command[slicesIndex(command, "-servername")+1] = "different.example.com"
 	test := &serverTest{
 		name:     "SNI",
 		command:  command,
@@ -1101,8 +1100,8 @@ func TestHandshakeServerSNIGetCertificate(t *testing.T) {
 	config.GetCertificate = func(clientHello *ClientHelloInfo) (*Certificate, error) {
 		return &testSNICert, nil
 	}
-	command := slices.Clone(defaultClientCommand)
-	command[slices.Index(command, "-servername")+1] = "different.example.com"
+	command := slicesClone(defaultClientCommand)
+	command[slicesIndex(command, "-servername")+1] = "different.example.com"
 	test := &serverTest{
 		name:     "SNI-GetCertificate",
 		command:  command,
@@ -1122,8 +1121,8 @@ func TestHandshakeServerSNIGetCertificateNotFound(t *testing.T) {
 	config.GetCertificate = func(clientHello *ClientHelloInfo) (*Certificate, error) {
 		return nil, nil
 	}
-	command := slices.Clone(defaultClientCommand)
-	command[slices.Index(command, "-servername")+1] = "different.example.com"
+	command := slicesClone(defaultClientCommand)
+	command[slicesIndex(command, "-servername")+1] = "different.example.com"
 	test := &serverTest{
 		name:     "SNI-GetCertificateNotFound",
 		command:  command,
@@ -1173,11 +1172,11 @@ func TestHandshakeServerGetCertificateExtensions(t *testing.T) {
 			}
 
 			// Go's TLS client presents extensions in the ClientHello sorted by extension ID
-			slices.Sort(expectedExtensions)
+			slicesSort(expectedExtensions)
 
 			serverConfig := testConfigServer.Clone()
 			serverConfig.GetCertificate = func(clientHello *ClientHelloInfo) (*Certificate, error) {
-				if !slices.Equal(expectedExtensions, clientHello.Extensions) {
+				if !slicesEqual(expectedExtensions, clientHello.Extensions) {
 					t.Errorf("expected extensions on ClientHelloInfo (%v) to match clientHelloMsg (%v)", expectedExtensions, clientHello.Extensions)
 				}
 				called.Add(1)
@@ -1258,8 +1257,8 @@ func TestServerResumption(t *testing.T) {
 	sessionFilePath := tempFile("")
 	defer os.Remove(sessionFilePath)
 
-	command := slices.Clone(defaultClientCommand)
-	command = slices.DeleteFunc(command, func(s string) bool { return s == "-no_ticket" })
+	command := slicesClone(defaultClientCommand)
+	command = slicesDeleteFunc(command, func(s string) bool { return s == "-no_ticket" })
 
 	testIssue := &serverTest{
 		name:    "IssueTicket",
@@ -1303,8 +1302,8 @@ func TestServerResumptionDisabled(t *testing.T) {
 	defer os.Remove(sessionFilePath)
 
 	config := testConfigServer.Clone()
-	command := slices.Clone(defaultClientCommand)
-	command = slices.DeleteFunc(command, func(s string) bool { return s == "-no_ticket" })
+	command := slicesClone(defaultClientCommand)
+	command = slicesDeleteFunc(command, func(s string) bool { return s == "-no_ticket" })
 
 	testIssue := &serverTest{
 		name:    "IssueTicketPreDisable",

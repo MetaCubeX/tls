@@ -25,7 +25,6 @@ import (
 	"net"
 	"os"
 	"reflect"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1566,11 +1565,11 @@ func TestCipherSuites(t *testing.T) {
 		}
 
 		if cc.Insecure {
-			if slices.Contains(defaultCipherSuites(false), c.id) {
+			if slicesContains(defaultCipherSuites(false), c.id) {
 				t.Errorf("%#04x: insecure suite in default list", c.id)
 			}
 		} else {
-			if !slices.Contains(defaultCipherSuites(false), c.id) {
+			if !slicesContains(defaultCipherSuites(false), c.id) {
 				t.Errorf("%#04x: secure suite not in default list", c.id)
 			}
 		}
@@ -1710,7 +1709,7 @@ func TestCipherSuites(t *testing.T) {
 			t.Fatalf("two ciphersuites are equal by all criteria: %v and %v", aName, bName)
 			panic("unreachable")
 		}
-		if !slices.IsSortedFunc(prefOrder, isBetter) {
+		if !slicesIsSortedFunc(prefOrder, isBetter) {
 			t.Error("preference order is not sorted according to the rules")
 		}
 	}
@@ -2104,8 +2103,8 @@ func TestHandshakeMLKEM(t *testing.T) {
 				test.serverConfig(serverConfig)
 			}
 			serverConfig.GetConfigForClient = func(hello *ClientHelloInfo) (*Config, error) {
-				expectClient := slices.Clone(test.expectClient)
-				if !slices.Equal(hello.SupportedCurves, expectClient) {
+				expectClient := slicesClone(test.expectClient)
+				if !slicesEqual(hello.SupportedCurves, expectClient) {
 					t.Errorf("got client curves %v, expected %v", hello.SupportedCurves, expectClient)
 				}
 				return nil, nil
@@ -2155,10 +2154,10 @@ func TestSupportedSignatureAlgorithmsMLDSAGating(t *testing.T) {
 		fullRange := supportedSignatureAlgorithms(VersionTLS10, VersionTLS13)
 		certExt := supportedSignatureAlgorithmsCert(VersionTLS10, VersionTLS13)
 		for _, s := range mldsaSchemes {
-			if slices.Contains(fullRange, s) {
+			if slicesContains(fullRange, s) {
 				t.Errorf("supportedSignatureAlgorithms contains %v under FIPS 140-3 v1.0.0", s)
 			}
-			if slices.Contains(certExt, s) {
+			if slicesContains(certExt, s) {
 				t.Errorf("supportedSignatureAlgorithmsCert contains %v under FIPS 140-3 v1.0.0", s)
 			}
 		}
@@ -2168,20 +2167,20 @@ func TestSupportedSignatureAlgorithmsMLDSAGating(t *testing.T) {
 	tls12Only := supportedSignatureAlgorithms(VersionTLS12, VersionTLS12)
 	tls12OnlyCert := supportedSignatureAlgorithmsCert(VersionTLS12, VersionTLS12)
 	for _, s := range mldsaSchemes {
-		if slices.Contains(tls12Only, s) {
+		if slicesContains(tls12Only, s) {
 			t.Errorf("supportedSignatureAlgorithms(TLS12, TLS12) contains %v; ML-DSA must not be advertised in TLS 1.2", s)
 		}
-		if slices.Contains(tls12OnlyCert, s) {
+		if slicesContains(tls12OnlyCert, s) {
 			t.Errorf("supportedSignatureAlgorithmsCert(TLS12, TLS12) contains %v; ML-DSA must not be advertised in TLS 1.2", s)
 		}
 	}
 	tls13Only := supportedSignatureAlgorithms(VersionTLS13, VersionTLS13)
 	tls13OnlyCert := supportedSignatureAlgorithmsCert(VersionTLS13, VersionTLS13)
 	for _, s := range mldsaSchemes {
-		if !slices.Contains(tls13Only, s) {
+		if !slicesContains(tls13Only, s) {
 			t.Errorf("supportedSignatureAlgorithms(TLS13, TLS13) is missing %v", s)
 		}
-		if !slices.Contains(tls13OnlyCert, s) {
+		if !slicesContains(tls13OnlyCert, s) {
 			t.Errorf("supportedSignatureAlgorithmsCert(TLS13, TLS13) is missing %v", s)
 		}
 	}
@@ -2834,11 +2833,11 @@ func testLocalCertificate(t *testing.T, version uint16, callback bool) {
 		t.Fatalf("unexpected failure: %s", err)
 	}
 
-	if !slices.EqualFunc(ss.LocalCertificate, serverCert.Certificate, bytes.Equal) {
+	if !slicesEqualFunc(ss.LocalCertificate, serverCert.Certificate, bytes.Equal) {
 		t.Errorf("unexpected server local certificate: %x, want %x", ss.LocalCertificate, serverCert.Certificate)
 	}
 
-	if !slices.EqualFunc(cs.LocalCertificate, clientCert.Certificate, bytes.Equal) {
+	if !slicesEqualFunc(cs.LocalCertificate, clientCert.Certificate, bytes.Equal) {
 		t.Errorf("unexpected client local certificate: %x, want %x", cs.LocalCertificate, clientCert.Certificate)
 	}
 }
