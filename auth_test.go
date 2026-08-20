@@ -7,7 +7,6 @@ package tls
 import (
 	"crypto"
 	"crypto/fips140"
-	"crypto/internal/cryptotest"
 	"crypto/mldsa"
 	"internal/testenv"
 	"strconv"
@@ -55,10 +54,6 @@ func TestSignatureSelection(t *testing.T) {
 
 	for testNo, test := range tests {
 		t.Run(strconv.Itoa(testNo), func(t *testing.T) {
-			switch test.expectedSigAlg {
-			case MLDSA44, MLDSA65, MLDSA87:
-				cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")
-			}
 			if test.godebug != "" {
 				testenv.SetGODEBUG(t, test.godebug)
 			} else {

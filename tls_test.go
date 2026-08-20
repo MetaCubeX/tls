@@ -12,7 +12,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/fips140"
-	"crypto/internal/cryptotest"
 	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/x509"
@@ -2377,7 +2376,6 @@ func TestHandshakeMLDSA(t *testing.T) {
 				if v == VersionTLS10 {
 					skipFIPS(t) // TLS 1.0 is not allowed in FIPS 140-3 mode.
 				}
-				cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")
 				t.Parallel()
 				serverConfig := testConfigServer.Clone()
 				serverConfig.MinVersion = VersionTLS10
@@ -2400,7 +2398,6 @@ func TestHandshakeMLDSA(t *testing.T) {
 				}
 			})
 			t.Run(name+"/Client", func(t *testing.T) {
-				cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")
 				t.Parallel()
 				serverConfig := testConfigServer.Clone()
 				serverConfig.MinVersion = VersionTLS10
@@ -2425,7 +2422,6 @@ func TestHandshakeMLDSA(t *testing.T) {
 			})
 		}
 		t.Run(tt.name+"/CorruptedSignature/Server", func(t *testing.T) {
-			cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")
 			t.Parallel()
 			serverConfig := testConfigServer.Clone()
 			serverConfig.Certificates = []Certificate{{
@@ -2445,7 +2441,6 @@ func TestHandshakeMLDSA(t *testing.T) {
 			}
 		})
 		t.Run(tt.name+"/CorruptedSignature/Client", func(t *testing.T) {
-			cryptotest.MustMinimumFIPS140ModuleVersion(t, "v1.26.0")
 			t.Parallel()
 			serverConfig := testConfigServer.Clone()
 			serverConfig.ClientAuth = RequireAndVerifyClientCert
