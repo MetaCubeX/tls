@@ -11,7 +11,6 @@ import (
 	"context"
 	"crypto/cipher"
 	"crypto/subtle"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"hash"
@@ -20,6 +19,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/metacubex/x509"
 )
 
 // A Conn represents a secured connection.

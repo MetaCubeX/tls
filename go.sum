@@ -8,6 +8,8 @@ github.com/metacubex/mldsa v0.1.1 h1:Tl9+FeM+AUqL5lG3C8JuoxVGsIINuY0b7XsQgz8jwyU
 github.com/metacubex/mldsa v0.1.1/go.mod h1:RY6NOdBYmQ17ZRAn5TgXtJCTmuaI3oYdU+XicSGO8Lg=
 github.com/metacubex/mlkem v0.1.0 h1:wFClitonSFcmipzzQvax75beLQU+D7JuC+VK1RzSL8I=
 github.com/metacubex/mlkem v0.1.0/go.mod h1:amhaXZVeYNShuy9BILcR7P0gbeo/QLZsnqCdL8U2PDQ=
+github.com/metacubex/x509 v0.1.0 h1:C2VIUEkUyLYbZacF2eyppzD9+htz8T9/2xBDwCaWVt8=
+github.com/metacubex/x509 v0.1.0/go.mod h1:/rSWFC96hK0O8x7SHbXHrejWDlv4wCQ3rJBFJfuf+SM=
 golang.org/x/crypto v0.33.0 h1:IOBPskki6Lysi0lo9qQvbxiQ+FvsCC/YWOecCHAixus=
 golang.org/x/crypto v0.33.0/go.mod h1:bVdXmD7IV/4GdElGPozy6U7lWdRXA4qyRVGJV57uQ5M=
 golang.org/x/sys v0.30.0 h1:QjkSwP/36a20jFYWkSue1YwXzLmsV5Gfq7Eiy72C1uc=

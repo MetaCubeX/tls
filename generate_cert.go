@@ -15,7 +15,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"flag"
@@ -27,6 +26,7 @@ import (
 	"time"
 
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 var (

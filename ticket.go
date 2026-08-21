@@ -10,10 +10,10 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"crypto/subtle"
-	"crypto/x509"
 	"errors"
 	"io"
 
+	"github.com/metacubex/x509"
 	"golang.org/x/crypto/cryptobyte"
 )
 

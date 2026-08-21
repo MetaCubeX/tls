@@ -6,10 +6,11 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"github.com/metacubex/mldsa"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/pem"
+
+	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 var (

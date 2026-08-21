@@ -15,7 +15,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha512"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -27,6 +26,7 @@ import (
 	_ "unsafe" // for linkname
 
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 const (

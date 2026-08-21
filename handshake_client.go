@@ -12,7 +12,6 @@ import (
 	"crypto/ed25519"
 	"crypto/rsa"
 	"crypto/subtle"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"hash"
@@ -23,6 +22,7 @@ import (
 
 	"github.com/metacubex/hpke"
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 type clientHandshakeState struct {

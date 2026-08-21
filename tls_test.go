@@ -12,7 +12,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/asn1"
 	"encoding/json"
@@ -30,6 +29,7 @@ import (
 	"time"
 
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 	"golang.org/x/crypto/cryptobyte"
 )
 

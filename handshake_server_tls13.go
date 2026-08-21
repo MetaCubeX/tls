@@ -10,7 +10,6 @@ import (
 	"crypto"
 	"crypto/hmac"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 
 	"github.com/metacubex/hkdf"
 	"github.com/metacubex/hpke"
+	"github.com/metacubex/x509"
 )
 
 // maxClientPSKIdentities is the number of client PSK identities the server will

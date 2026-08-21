@@ -10,7 +10,6 @@ import (
 	"crypto"
 	"crypto/ecdh"
 	"crypto/rand"
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"errors"
@@ -26,6 +25,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/metacubex/x509"
 )
 
 func testClientHello(t *testing.T, serverConfig *Config, m handshakeMessage) {

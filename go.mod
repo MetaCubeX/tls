@@ -8,6 +8,7 @@ require (
 	github.com/metacubex/hpke v0.1.0
 	github.com/metacubex/mldsa v0.1.1
 	github.com/metacubex/mlkem v0.1.0
+	github.com/metacubex/x509 v0.1.0
 	golang.org/x/crypto v0.33.0
 )
 

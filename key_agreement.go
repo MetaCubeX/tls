@@ -10,10 +10,11 @@ import (
 	"crypto/md5"
 	"crypto/rsa"
 	"crypto/sha1"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/metacubex/x509"
 )
 
 // A keyAgreement implements the client and server side of a TLS 1.0–1.2 key

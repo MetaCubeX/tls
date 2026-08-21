@@ -6,7 +6,6 @@ package tls
 
 import (
 	"bytes"
-	"crypto/x509"
 	"encoding/hex"
 	"math"
 	"math/rand"
@@ -15,6 +14,8 @@ import (
 	"testing"
 	"testing/quick"
 	"time"
+
+	"github.com/metacubex/x509"
 )
 
 var tests = []handshakeMessage{

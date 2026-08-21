@@ -5,10 +5,11 @@
 package tls
 
 import (
-	"crypto/x509"
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"github.com/metacubex/x509"
 )
 
 type cacheEntry struct {

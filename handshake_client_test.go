@@ -11,7 +11,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/base64"
 	"encoding/binary"
@@ -31,6 +30,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/metacubex/x509"
 )
 
 // Note: see comment in handshake_test.go for details of how the reference

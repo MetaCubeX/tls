@@ -29,7 +29,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -38,6 +37,7 @@ import (
 	"strings"
 
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 // Server returns a new TLS server side connection

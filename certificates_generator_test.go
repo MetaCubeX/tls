@@ -13,7 +13,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"flag"
@@ -25,6 +24,7 @@ import (
 	"time"
 
 	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 var generate = flag.Bool("generate", false, "regenerate certificates_test.go")
@@ -391,10 +391,11 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"github.com/metacubex/mldsa"
 	"crypto/rsa"
-	"crypto/x509"
 	"encoding/pem"
+
+	"github.com/metacubex/mldsa"
+	"github.com/metacubex/x509"
 )
 
 `)
