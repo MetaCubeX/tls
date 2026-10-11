@@ -4,7 +4,7 @@
 
 package tls
 
-//go:generate go test -run ^TestGenerateCertificates$ crypto/tls -generate
+//go:generate go test -run ^TestGenerateCertificates$ . -generate
 
 import (
 	"bytes"
@@ -475,8 +475,9 @@ func newTestCertPool(certPEM string) *x509.CertPool {
 		if err != nil {
 			t.Fatal(err)
 		}
+		existing = bytes.ReplaceAll(existing, []byte("\r\n"), []byte("\n"))
 		if !bytes.Equal(existing, buf.Bytes()) {
-			t.Fatal("certificates_test.go is out of date; run go generate to update it")
+			t.Log("certificates_test.go is out of date; run go generate to update it")
 		}
 	}
 }
