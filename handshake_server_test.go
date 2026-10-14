@@ -698,6 +698,7 @@ func (test *serverTest) run(t *testing.T, write bool) {
 		config = testConfigServer
 	}
 	config = config.Clone()
+	config = prepareReferenceConfig(config)
 	server := Server(serverConn, config)
 
 	_, err := server.Write([]byte("hello, world\n"))
@@ -897,7 +898,6 @@ func TestHandshakeServerCHACHA20SHA256(t *testing.T) {
 }
 
 func TestHandshakeServerECDHEECDSAAES(t *testing.T) {
-	skipECDSATest(t)
 	test := &serverTest{
 		name:    "ECDHE-ECDSA-AES",
 		command: append(defaultClientCommand, "-sigalgs", "ecdsa_secp256r1_sha256"),

@@ -2,6 +2,7 @@
 
 package tls
 
-import "testing"
-
-func skipECDSATest(t *testing.T) {}
+// Go 1.24+ already produces the signatures used by the handshake recordings.
+func prepareReferenceConfig(config *Config) *Config {
+	return config
+}

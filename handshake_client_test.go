@@ -306,6 +306,7 @@ func (test *clientTest) run(t *testing.T, write bool) {
 		config = testConfigClient
 	}
 	config = config.Clone()
+	config = prepareReferenceConfig(config)
 	client := Client(clientConn, config)
 	defer client.Close()
 
@@ -818,7 +819,6 @@ func TestHandshakeClientCertRSA(t *testing.T) {
 }
 
 func TestHandshakeClientCertECDSA(t *testing.T) {
-	skipECDSATest(t)
 	config := testConfigClient.Clone()
 	config.Certificates = []Certificate{testClientECDSAP256Cert}
 
