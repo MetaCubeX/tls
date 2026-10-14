@@ -1100,7 +1100,7 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 			for _, cert := range certs[1:] {
 				opts.Intermediates.AddCert(cert)
 			}
-			chains, err := certs[0].Verify(opts)
+			chains, err := X509VerifyCertificate(certs[0], opts)
 			if err != nil {
 				c.sendAlert(alertBadCertificate)
 				return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}
@@ -1123,7 +1123,7 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 		for _, cert := range certs[1:] {
 			opts.Intermediates.AddCert(cert)
 		}
-		chains, err := certs[0].Verify(opts)
+		chains, err := X509VerifyCertificate(certs[0], opts)
 		if err != nil {
 			c.sendAlert(alertBadCertificate)
 			return &CertificateVerificationError{UnverifiedCertificates: certs, Err: err}

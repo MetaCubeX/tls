@@ -5,6 +5,7 @@ package tls
 import (
 	"crypto"
 	"crypto/mldsa"
+	"errors"
 
 	backportmldsa "github.com/metacubex/mldsa"
 )
@@ -50,4 +51,34 @@ func verifyExtraMLDSA(pub crypto.PublicKey, signed, sig []byte) (bool, error) {
 		return false, nil
 	}
 	return true, backportmldsa.Verify(key, signed, sig, nil)
+}
+
+// A nil key with no error means that the original public key needs no change.
+func normalizeX509PublicKey(pub crypto.PublicKey) (*mldsaPublicKey, error) {
+	// Also avoid conversion if the fork ever aliases the native type.
+	if _, ok := pub.(*mldsaPublicKey); ok {
+		return nil, nil
+	}
+	key, ok := pub.(*backportmldsa.PublicKey)
+	if !ok {
+		return nil, nil
+	}
+	if key == nil {
+		return nil, errors.New("tls: nil ML-DSA public key")
+	}
+	encoded := key.Bytes()
+	var params mldsa.Parameters
+	// Each ML-DSA parameter set has a distinct public-key encoding length. This
+	// also rejects a zero-value fork key without calling its Parameters method.
+	switch len(encoded) {
+	case mldsa.MLDSA44PublicKeySize:
+		params = mldsaMLDSA44()
+	case mldsa.MLDSA65PublicKeySize:
+		params = mldsaMLDSA65()
+	case mldsa.MLDSA87PublicKeySize:
+		params = mldsaMLDSA87()
+	default:
+		return nil, errors.New("tls: invalid ML-DSA public key size")
+	}
+	return mldsa.NewPublicKey(params, encoded)
 }

@@ -1882,12 +1882,12 @@ func anyValidVerifiedChain(verifiedChains [][]*x509.Certificate, opts x509.Verif
 				opts.Intermediates.AddCert(cert)
 			}
 			leaf := chain[0]
-			if _, err := leaf.Verify(opts); err == nil {
+			if _, err := X509VerifyCertificate(leaf, opts); err == nil {
 				return true
 			}
 		} else {
 			root := chain[len(chain)-1]
-			if _, err := root.Verify(opts); err == nil {
+			if _, err := X509VerifyCertificate(root, opts); err == nil {
 				return true
 			}
 		}

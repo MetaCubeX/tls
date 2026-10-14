@@ -10,6 +10,8 @@ import (
 	"errors"
 	"reflect"
 	"testing"
+
+	"github.com/metacubex/mldsa"
 )
 
 func TestMLDSAKeyDecoding(t *testing.T) {
@@ -205,13 +207,9 @@ func TestMLDSACAChainVerification(t *testing.T) {
 			server.ClientAuth, server.ClientCAs = RequireAndVerifyClientCert, client.RootCAs
 			ss, cs, err := testHandshake(t, client, server)
 			if !nativeMLDSA {
-				if err == nil {
-					t.Fatal("ML-DSA CA was accepted without native x509 support")
-				}
 				if err := leaf.Leaf.CheckSignatureFrom(ca); !errors.Is(err, x509.ErrUnsupportedAlgorithm) {
 					t.Fatalf("expected an unsupported CA signature algorithm, got %v", err)
 				}
-				return
 			}
 			if err != nil {
 				t.Fatal(err)
@@ -240,6 +238,164 @@ func TestStdlibSystemCertPool(t *testing.T) {
 	}
 	if client.RootCAs != pool {
 		t.Fatal("standard-library system pool was replaced")
+	}
+}
+
+func TestX509NormalizeCertificateUnchanged(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		cert *x509.Certificate
+	}{
+		{"nil", nil},
+		{"empty", new(x509.Certificate)},
+		{"RSA", testRootCert.Leaf},
+		// Ed25519 public keys are slices, so comparing PublicKey interfaces
+		// to detect a change would panic.
+		{"Ed25519", testEd25519Cert.Leaf},
+		{"MLDSA44", testMLDSA44Cert.Leaf},
+		{"MLDSA65", testMLDSA65Cert.Leaf},
+		{"MLDSA87", testMLDSA87Cert.Leaf},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if allocs := testing.AllocsPerRun(100, func() {
+				got, err := X509NormalizeCertificate(tc.cert)
+				if err != nil || got != tc.cert {
+					t.Fatalf("no-op normalization: got %p, %v; want %p", got, err, tc.cert)
+				}
+			}); allocs != 0 {
+				t.Fatalf("no-op normalization allocated %v times", allocs)
+			}
+		})
+	}
+}
+
+func TestX509NormalizeForkMLDSACertificate(t *testing.T) {
+	for _, tc := range []struct {
+		params mldsa.Parameters
+		cert   Certificate
+	}{
+		{mldsa.MLDSA44(), testMLDSA44Cert},
+		{mldsa.MLDSA65(), testMLDSA65Cert},
+		{mldsa.MLDSA87(), testMLDSA87Cert},
+	} {
+		t.Run(tc.params.String(), func(t *testing.T) {
+			forkKey, err := mldsa.NewPrivateKey(tc.params, tc.cert.PrivateKey.(*mldsaPrivateKey).Bytes())
+			if err != nil {
+				t.Fatal(err)
+			}
+			input := *tc.cert.Leaf
+			input.PublicKey = forkKey.PublicKey()
+			// Preserve caller-supplied policy rather than reparse input.Raw.
+			input.NotAfter = input.NotBefore
+			input.PermittedDNSDomains = []string{"policy.example"}
+			before := input
+			got, err := X509NormalizeCertificate(&input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(input, before) {
+				t.Fatal("input certificate changed")
+			}
+			if _, ok := got.PublicKey.(*mldsaPublicKey); !ok {
+				t.Fatalf("unexpected normalized public key: %T", got.PublicKey)
+			}
+			if !got.PublicKey.(interface{ Equal(crypto.PublicKey) bool }).Equal(tc.cert.Leaf.PublicKey) {
+				t.Fatal("normalized public key differs from the original")
+			}
+			_, primary := input.PublicKey.(*mldsaPublicKey)
+			if (got == &input) != primary {
+				t.Fatal("certificate must be copied only when key conversion is needed")
+			}
+			fields := *got
+			fields.PublicKey = input.PublicKey
+			if !reflect.DeepEqual(fields, input) {
+				t.Fatal("normalization changed fields other than PublicKey")
+			}
+			if again, err := X509NormalizeCertificate(got); err != nil || again != got {
+				t.Fatalf("repeated normalization: got %p, %v; want %p", again, err, got)
+			}
+			if !nativeMLDSA {
+				return
+			}
+			encoded, err := x509.MarshalPKIXPublicKey(got.PublicKey)
+			if err != nil || !bytes.Equal(encoded, input.RawSubjectPublicKeyInfo) {
+				t.Fatalf("standard-library public-key encoding failed: %v", err)
+			}
+		})
+	}
+}
+
+func TestX509NormalizeForkMLDSACertificatePools(t *testing.T) {
+	for _, tc := range []struct {
+		params mldsa.Parameters
+		cert   Certificate
+		scheme SignatureScheme
+	}{
+		{mldsa.MLDSA44(), testMLDSA44Cert, MLDSA44},
+		{mldsa.MLDSA65(), testMLDSA65Cert, MLDSA65},
+		{mldsa.MLDSA87(), testMLDSA87Cert, MLDSA87},
+	} {
+		t.Run(tc.params.String(), func(t *testing.T) {
+			ca := reissueMLDSATestCertificate(t, tc.cert.Leaf, testRootCert.Leaf,
+				testRootCert.PrivateKey.(crypto.Signer), PKCS1WithSHA256, 300, true)
+			leaf := reissueMLDSATestCertificate(t, testECDSAP256Cert.Leaf, ca,
+				tc.cert.PrivateKey.(crypto.Signer), tc.scheme, 301, false)
+			forkKey, err := mldsa.NewPrivateKey(tc.params, tc.cert.PrivateKey.(*mldsaPrivateKey).Bytes())
+			if err != nil {
+				t.Fatal(err)
+			}
+			ca.PublicKey = forkKey.PublicKey()
+			ca, err = X509NormalizeCertificate(ca)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, name := range []string{"root", "intermediate"} {
+				t.Run(name, func(t *testing.T) {
+					opts := x509.VerifyOptions{
+						Roots: x509.NewCertPool(), Intermediates: x509.NewCertPool(),
+						CurrentTime: testTime(), DNSName: "test.golang.example",
+					}
+					wantLen := 2
+					if name == "root" {
+						opts.Roots.AddCert(ca)
+					} else {
+						opts.Roots.AddCert(testRootCert.Leaf)
+						opts.Intermediates.AddCert(ca)
+						wantLen = 3
+					}
+					chains, err := X509VerifyCertificate(leaf, opts)
+					if err != nil || len(chains) == 0 || len(chains[0]) != wantLen || chains[0][1] != ca {
+						t.Fatalf("normalized CA verification failed: %v, %v", chains, err)
+					}
+					if nativeMLDSA {
+						if err := leaf.CheckSignatureFrom(ca); err != nil {
+							t.Fatalf("standard-library signature check failed: %v", err)
+						}
+						if _, err := leaf.Verify(opts); err != nil {
+							t.Fatalf("standard-library chain verification failed: %v", err)
+						}
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestX509NormalizeInvalidForkMLDSAPublicKey(t *testing.T) {
+	for _, key := range []*mldsa.PublicKey{nil, new(mldsa.PublicKey)} {
+		cert := &x509.Certificate{PublicKey: key}
+		got, err := X509NormalizeCertificate(cert)
+		if _, primary := cert.PublicKey.(*mldsaPublicKey); primary {
+			// The normalizer does not validate keys already using the primary type.
+			if err != nil || got != cert {
+				t.Fatalf("no-op normalization: got %p, %v; want %p", got, err, cert)
+			}
+		} else if err == nil || got != nil {
+			t.Fatalf("invalid fork key accepted: %v, %v", got, err)
+		}
+		if cert.PublicKey != key {
+			t.Fatal("input public key changed")
+		}
 	}
 }
 

@@ -9,6 +9,38 @@ import (
 	"github.com/metacubex/mldsa"
 )
 
+// X509VerifyCertificate verifies cert like [x509.Certificate.Verify], adding ML-DSA
+// CA support on Go 1.20-1.26. Supply intermediate certificates in opts.Intermediates.
+// It does not modify cert or the certificate pools in opts. System-root verification
+// retains the standard library's platform-specific behavior and limitations.
+func X509VerifyCertificate(cert *x509.Certificate, opts x509.VerifyOptions) ([][]*x509.Certificate, error) {
+	return verifyCertificate(cert, opts)
+}
+
+// X509NormalizeCertificate converts cert's [mldsa.PublicKey] to crypto/mldsa on
+// Go 1.27+. It returns a shallow copy only when conversion is needed, preserving
+// all other fields without reparsing DER. Otherwise, including on Go 1.20-1.26,
+// it returns cert unchanged. A nil cert returns nil, nil.
+//
+// Call this before adding externally supplied certificates to a CertPool. It
+// does not modify cert, normalize existing pools, or validate the certificate.
+// On older Go versions, use [X509VerifyCertificate] for ML-DSA CA verification.
+func X509NormalizeCertificate(cert *x509.Certificate) (*x509.Certificate, error) {
+	if cert == nil {
+		return nil, nil
+	}
+	key, err := normalizeX509PublicKey(cert.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+	if key == nil {
+		return cert, nil
+	}
+	normalized := *cert
+	normalized.PublicKey = key
+	return &normalized, nil
+}
+
 // X509ParseCertificate parses a certificate like [x509.ParseCertificate], adding
 // ML-DSA public key decoding on Go versions before 1.27.
 func X509ParseCertificate(der []byte) (*x509.Certificate, error) {

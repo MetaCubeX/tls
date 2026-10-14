@@ -963,7 +963,7 @@ func (c *Conn) processCertsFromClient(certificate Certificate) error {
 			opts.Intermediates.AddCert(cert)
 		}
 
-		chains, err := certs[0].Verify(opts)
+		chains, err := X509VerifyCertificate(certs[0], opts)
 		if err != nil {
 			if _, ok := errorsAsType[x509.UnknownAuthorityError](err); ok {
 				c.sendAlert(alertUnknownCA)

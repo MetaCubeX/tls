@@ -29,3 +29,7 @@ func extraMLDSASignatureScheme(pub crypto.PublicKey) SignatureScheme { return 0 
 func verifyExtraMLDSA(pub crypto.PublicKey, signed, sig []byte) (bool, error) {
 	return false, nil
 }
+
+func normalizeX509PublicKey(pub crypto.PublicKey) (*mldsaPublicKey, error) {
+	return nil, nil
+}
