@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/metacubex/hpke"
-	"github.com/metacubex/mldsa"
 )
 
 type clientHandshakeState struct {
@@ -1139,7 +1138,7 @@ func (c *Conn) verifyServerCertificate(certificates [][]byte) error {
 
 	switch certs[0].PublicKey.(type) {
 	case *rsa.PublicKey, *ecdsa.PublicKey, ed25519.PublicKey:
-	case *mldsa.PublicKey:
+	case *mldsaPublicKey:
 		if c.vers < VersionTLS13 {
 			c.sendAlert(alertIllegalParameter)
 			return errors.New("tls: server's certificate uses ML-DSA, which requires TLS 1.3")

@@ -2,15 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build go1.27
+
 package tls
 
-//go:generate go test -run ^TestGenerateCertificates$ crypto/tls -generate
+//go:generate go test -run ^TestGenerateCertificates$ . -generate
 
 import (
 	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
+	"crypto/mldsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -23,20 +26,18 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/metacubex/mldsa"
 )
 
 var generate = flag.Bool("generate", false, "regenerate certificates_test.go")
 
 func TestGenerateCertificates(t *testing.T) {
-	// The RSA key generation algorithm changed after Go 1.26.0.
+	// Certificate generation is expensive, so skip it in short mode.
 	if testing.Short() && !*generate {
 		t.Skip("set -generate to regenerate certificates_test.go, or run without -short to check")
 	}
 
-	// Allow RSA keys below 1024 bits for testRSA512.
-	t.Setenv("GODEBUG", "rsa1024min=0")
+	// Allow testRSA512 and keep fixture key identifiers independent of go.mod.
+	t.Setenv("GODEBUG", "rsa1024min=0,x509sha256skid=1")
 
 	setGlobalRandom(t, 0)
 
@@ -391,7 +392,6 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"github.com/metacubex/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -409,8 +409,8 @@ import (
 		// loads with a nil PrivateKey under that module, so use a tolerant
 		// type assertion. Tests using these vars must skip on v1.0.0.
 		if p.keyType == "*mldsa.PrivateKey" {
-			fmt.Fprintf(&buf, "\t%sKey, _ = %sCert.PrivateKey.(%s)\n\n",
-				p.name, p.name, p.keyType)
+			fmt.Fprintf(&buf, "\t%sKey, _ = %sCert.PrivateKey.(*mldsaPrivateKey)\n\n",
+				p.name, p.name)
 		} else {
 			fmt.Fprintf(&buf, "\t%sKey  = %sCert.PrivateKey.(%s)\n\n",
 				p.name, p.name, p.keyType)
@@ -436,17 +436,17 @@ import (
 		panic("failed to parse certificate PEM")
 	}
 	cert.Certificate = [][]byte{block.Bytes}
-	cert.Leaf, _ = x509.ParseCertificate(block.Bytes)
+	cert.Leaf, _ = X509ParseCertificate(block.Bytes)
 	if cert.Leaf == nil {
 		panic("failed to parse certificate")
 	}
 	// Don't parse the private key for ML-DSA certificates with FIPS 140-3 module v1.0.0.
-	if cert.Leaf.PublicKeyAlgorithm != x509.UnknownPublicKeyAlgorithm {
+	if cert.Leaf.PublicKey != nil {
 		block, _ = pem.Decode([]byte(keyPEM))
 		if block == nil {
 			panic("failed to parse key PEM")
 		}
-		cert.PrivateKey, _ = x509.ParsePKCS8PrivateKey(block.Bytes)
+		cert.PrivateKey, _ = X509ParsePKCS8PrivateKey(block.Bytes)
 		if cert.PrivateKey == nil {
 			panic("failed to parse private key")
 		}
@@ -474,6 +474,7 @@ func newTestCertPool(certPEM string) *x509.CertPool {
 		if err != nil {
 			t.Fatal(err)
 		}
+		existing = bytes.ReplaceAll(existing, []byte("\r\n"), []byte("\n"))
 		if !bytes.Equal(existing, buf.Bytes()) {
 			t.Fatal("certificates_test.go is out of date; run go generate to update it")
 		}

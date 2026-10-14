@@ -36,8 +36,6 @@ import (
 	"net"
 	"os"
 	"strings"
-
-	"github.com/metacubex/mldsa"
 )
 
 // Server returns a new TLS server side connection
@@ -305,7 +303,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (Certificate, error) {
 
 	// We don't need to parse the public key for TLS, but we so do anyway
 	// to check that it looks sane and matches the private key.
-	x509Cert, err := x509.ParseCertificate(cert.Certificate[0])
+	x509Cert, err := X509ParseCertificate(cert.Certificate[0])
 	if err != nil {
 		return fail(err)
 	}
@@ -341,8 +339,8 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (Certificate, error) {
 		if !priv.Public().(ed25519.PublicKey).Equal(pub) {
 			return fail(errors.New("tls: private key does not match public key"))
 		}
-	case *mldsa.PublicKey:
-		priv, ok := cert.PrivateKey.(*mldsa.PrivateKey)
+	case *mldsaPublicKey:
+		priv, ok := cert.PrivateKey.(*mldsaPrivateKey)
 		if !ok {
 			return fail(errors.New("tls: private key type does not match public key type"))
 		}
@@ -360,7 +358,7 @@ func X509KeyPair(certPEMBlock, keyPEMBlock []byte) (Certificate, error) {
 // PKCS #1 private keys by default, while OpenSSL 1.0.0 generates PKCS #8 keys.
 // OpenSSL ecparam generates SEC1 EC private keys for ECDSA. We try all three.
 func parsePrivateKey(der []byte) (crypto.PrivateKey, error) {
-	key, err := x509.ParsePKCS8PrivateKey(der)
+	key, err := X509ParsePKCS8PrivateKey(der)
 	pkcs8Err := err // Return the PKCS#8 error if all parsing attempts fail.
 	if err != nil {
 		key, err = x509.ParsePKCS1PrivateKey(der)
@@ -372,7 +370,7 @@ func parsePrivateKey(der []byte) (crypto.PrivateKey, error) {
 		return nil, fmt.Errorf("tls: failed to parse private key: %w", pkcs8Err)
 	}
 	switch key := key.(type) {
-	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey, *mldsa.PrivateKey:
+	case *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey, *mldsaPrivateKey:
 		return key, nil
 	default:
 		return nil, errors.New("tls: found unknown private key type in PKCS#8 wrapping")

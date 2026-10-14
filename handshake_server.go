@@ -17,8 +17,6 @@ import (
 	"hash"
 	"io"
 	"time"
-
-	"github.com/metacubex/mldsa"
 )
 
 // serverHandshakeState contains details of a server handshake in progress.
@@ -307,13 +305,17 @@ func (hs *serverHandshakeState) processClientHello() error {
 			hs.ecSignOk = true
 		case *rsa.PublicKey:
 			hs.rsaSignOk = true
-		case *mldsa.PublicKey:
+		case *mldsaPublicKey:
 			// ML-DSA can only be used with TLS 1.3.
 			c.sendAlert(alertInternalError)
 			return fmt.Errorf("tls: ML-DSA certificates require TLS 1.3, but client negotiated %s",
 				VersionName(c.vers))
 		default:
 			c.sendAlert(alertInternalError)
+			if mldsaSignatureScheme(priv.Public()) != 0 {
+				return fmt.Errorf("tls: ML-DSA certificates require TLS 1.3, but client negotiated %s",
+					VersionName(c.vers))
+			}
 			return fmt.Errorf("tls: unsupported signing key type (%T)", priv.Public())
 		}
 	}
@@ -927,7 +929,7 @@ func (c *Conn) processCertsFromClient(certificate Certificate) error {
 	certs := make([]*x509.Certificate, len(certificates))
 	var err error
 	for i, asn1Data := range certificates {
-		if certs[i], err = x509.ParseCertificate(asn1Data); err != nil {
+		if certs[i], err = X509ParseCertificate(asn1Data); err != nil {
 			c.sendAlert(alertDecodeError)
 			return errors.New("tls: failed to parse client certificate: " + err.Error())
 		}
@@ -987,7 +989,7 @@ func (c *Conn) processCertsFromClient(certificate Certificate) error {
 	if len(certs) > 0 {
 		switch certs[0].PublicKey.(type) {
 		case *ecdsa.PublicKey, *rsa.PublicKey, ed25519.PublicKey:
-		case *mldsa.PublicKey:
+		case *mldsaPublicKey:
 			if c.vers < VersionTLS13 {
 				c.sendAlert(alertIllegalParameter)
 				return errors.New("tls: client certificate uses ML-DSA, which requires TLS 1.3")

@@ -15,8 +15,6 @@ import (
 	"fmt"
 	"hash"
 	"io"
-
-	"github.com/metacubex/mldsa"
 )
 
 // verifyHandshakeSignature verifies a signature against unhashed handshake contents.
@@ -47,11 +45,11 @@ func verifyHandshakeSignature(sigType uint8, pubkey crypto.PublicKey, hashFunc c
 			return errors.New("Ed25519 verification failure")
 		}
 	case signatureMLDSA:
-		pubKey, ok := pubkey.(*mldsa.PublicKey)
+		pubKey, ok := pubkey.(*mldsaPublicKey)
 		if !ok {
-			return fmt.Errorf("expected an ML-DSA public key, got %T", pubkey)
+			return verifyExtraMLDSAHandshakeSignature(pubkey, signed, sig)
 		}
-		if err := mldsa.Verify(pubKey, signed, sig, nil); err != nil {
+		if err := mldsaVerify(pubKey, signed, sig, nil); err != nil {
 			return fmt.Errorf("ML-DSA verification failure: %w", err)
 		}
 	case signaturePKCS1v15:
@@ -181,9 +179,12 @@ func legacyTypeAndHashFromPublicKey(pub crypto.PublicKey) (sigType uint8, hash c
 		// full signature, and not even OpenSSL bothers with the
 		// complexity, so we can't even test it properly.
 		return 0, 0, fmt.Errorf("tls: Ed25519 public keys are not supported before TLS 1.2")
-	case *mldsa.PublicKey:
+	case *mldsaPublicKey:
 		return 0, 0, fmt.Errorf("tls: ML-DSA public keys are not supported before TLS 1.3")
 	default:
+		if mldsaSignatureScheme(pub) != 0 {
+			return 0, 0, fmt.Errorf("tls: ML-DSA public keys are not supported before TLS 1.3")
+		}
 		return 0, 0, fmt.Errorf("tls: unsupported public key: %T", pub)
 	}
 }
@@ -239,18 +240,21 @@ func signatureSchemesForPublicKey(version uint16, pub crypto.PublicKey) []Signat
 		return sigAlgs
 	case ed25519.PublicKey:
 		return []SignatureScheme{Ed25519}
-	case *mldsa.PublicKey:
+	case *mldsaPublicKey:
 		switch pub.Parameters() {
-		case mldsa.MLDSA44():
+		case mldsaMLDSA44():
 			return []SignatureScheme{MLDSA44}
-		case mldsa.MLDSA65():
+		case mldsaMLDSA65():
 			return []SignatureScheme{MLDSA65}
-		case mldsa.MLDSA87():
+		case mldsaMLDSA87():
 			return []SignatureScheme{MLDSA87}
 		default:
 			panic("tls: internal error: unknown ML-DSA parameter set: " + pub.Parameters().String())
 		}
 	default:
+		if scheme := mldsaSignatureScheme(pub); scheme != 0 {
+			return []SignatureScheme{scheme}
+		}
 		return nil
 	}
 }
@@ -323,9 +327,12 @@ func unsupportedCertificateError(cert *Certificate) error {
 	case *rsa.PublicKey:
 		return fmt.Errorf("tls: certificate RSA key size too small for supported signature algorithms")
 	case ed25519.PublicKey:
-	case *mldsa.PublicKey:
+	case *mldsaPublicKey:
 		return errors.New("tls: ML-DSA certificates require TLS 1.3")
 	default:
+		if mldsaSignatureScheme(pub) != 0 {
+			return errors.New("tls: ML-DSA certificates require TLS 1.3")
+		}
 		return fmt.Errorf("tls: unsupported certificate key (%T)", pub)
 	}
 

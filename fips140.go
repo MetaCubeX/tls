@@ -1,7 +1,7 @@
 package tls
 
 func fips140Version() string {
-	return "v1.0.0"
+	return ""
 }
 
 func fips140WithoutEnforcement(f func()) {

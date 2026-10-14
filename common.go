@@ -25,8 +25,6 @@ import (
 	"sync"
 	"time"
 	_ "unsafe" // for linkname
-
-	"github.com/metacubex/mldsa"
 )
 
 const (
@@ -1490,7 +1488,7 @@ func (chi *ClientHelloInfo) SupportsCertificate(c *Certificate) error {
 				return errors.New("connection doesn't support Ed25519")
 			}
 			ecdsaCipherSuite = true
-		case *mldsa.PublicKey:
+		case *mldsaPublicKey:
 			// ML-DSA requires TLS 1.3, which we already excluded above.
 			return errors.New("connection doesn't support ML-DSA")
 		case *rsa.PublicKey:
@@ -1547,7 +1545,7 @@ func (cri *CertificateRequestInfo) SupportsCertificate(c *Certificate) error {
 		// chain.Leaf was nil.
 		if j != 0 || x509Cert == nil {
 			var err error
-			if x509Cert, err = x509.ParseCertificate(cert); err != nil {
+			if x509Cert, err = X509ParseCertificate(cert); err != nil {
 				return fmt.Errorf("failed to parse certificate #%d in the chain: %w", j, err)
 			}
 		}
@@ -1650,7 +1648,7 @@ func (c *Certificate) leaf() (*x509.Certificate, error) {
 	if c.Leaf != nil {
 		return c.Leaf, nil
 	}
-	return x509.ParseCertificate(c.Certificate[0])
+	return X509ParseCertificate(c.Certificate[0])
 }
 
 type handshakeMessage interface {

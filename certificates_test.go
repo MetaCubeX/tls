@@ -6,7 +6,6 @@ package tls
 import (
 	"crypto/ecdsa"
 	"crypto/ed25519"
-	"github.com/metacubex/mldsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
@@ -79,27 +78,27 @@ var (
 
 	// ML-DSA-44 server leaf, SAN=test.golang.example, issued by Root.
 	testMLDSA44Cert = parseTestCert(testMLDSA44CertPEM, testMLDSA44KeyPEM)
-	testMLDSA44Key, _ = testMLDSA44Cert.PrivateKey.(*mldsa.PrivateKey)
+	testMLDSA44Key, _ = testMLDSA44Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// ML-DSA-65 server leaf, SAN=test.golang.example, issued by Root.
 	testMLDSA65Cert = parseTestCert(testMLDSA65CertPEM, testMLDSA65KeyPEM)
-	testMLDSA65Key, _ = testMLDSA65Cert.PrivateKey.(*mldsa.PrivateKey)
+	testMLDSA65Key, _ = testMLDSA65Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// ML-DSA-87 server leaf, SAN=test.golang.example, issued by Root.
 	testMLDSA87Cert = parseTestCert(testMLDSA87CertPEM, testMLDSA87KeyPEM)
-	testMLDSA87Key, _ = testMLDSA87Cert.PrivateKey.(*mldsa.PrivateKey)
+	testMLDSA87Key, _ = testMLDSA87Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// ML-DSA-44 client leaf, SAN=test.golang.example, issued by Client Root.
 	testClientMLDSA44Cert = parseTestCert(testClientMLDSA44CertPEM, testClientMLDSA44KeyPEM)
-	testClientMLDSA44Key, _ = testClientMLDSA44Cert.PrivateKey.(*mldsa.PrivateKey)
+	testClientMLDSA44Key, _ = testClientMLDSA44Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// ML-DSA-65 client leaf, SAN=test.golang.example, issued by Client Root.
 	testClientMLDSA65Cert = parseTestCert(testClientMLDSA65CertPEM, testClientMLDSA65KeyPEM)
-	testClientMLDSA65Key, _ = testClientMLDSA65Cert.PrivateKey.(*mldsa.PrivateKey)
+	testClientMLDSA65Key, _ = testClientMLDSA65Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// ML-DSA-87 client leaf, SAN=test.golang.example, issued by Client Root.
 	testClientMLDSA87Cert = parseTestCert(testClientMLDSA87CertPEM, testClientMLDSA87KeyPEM)
-	testClientMLDSA87Key, _ = testClientMLDSA87Cert.PrivateKey.(*mldsa.PrivateKey)
+	testClientMLDSA87Key, _ = testClientMLDSA87Cert.PrivateKey.(*mldsaPrivateKey)
 
 	// x509.CertPool containing testRootCert.
 	testRootCertPool = newTestCertPool(testRootCertPEM)
@@ -1027,17 +1026,17 @@ func parseTestCert(certPEM, keyPEM string) Certificate {
 		panic("failed to parse certificate PEM")
 	}
 	cert.Certificate = [][]byte{block.Bytes}
-	cert.Leaf, _ = x509.ParseCertificate(block.Bytes)
+	cert.Leaf, _ = X509ParseCertificate(block.Bytes)
 	if cert.Leaf == nil {
 		panic("failed to parse certificate")
 	}
 	// Don't parse the private key for ML-DSA certificates with FIPS 140-3 module v1.0.0.
-	if cert.Leaf.PublicKeyAlgorithm != x509.UnknownPublicKeyAlgorithm {
+	if cert.Leaf.PublicKey != nil {
 		block, _ = pem.Decode([]byte(keyPEM))
 		if block == nil {
 			panic("failed to parse key PEM")
 		}
-		cert.PrivateKey, _ = x509.ParsePKCS8PrivateKey(block.Bytes)
+		cert.PrivateKey, _ = X509ParsePKCS8PrivateKey(block.Bytes)
 		if cert.PrivateKey == nil {
 			panic("failed to parse private key")
 		}

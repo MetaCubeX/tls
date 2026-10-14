@@ -29,7 +29,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/metacubex/mldsa"
 	"golang.org/x/crypto/cryptobyte"
 )
 
@@ -2218,7 +2217,7 @@ func TestHandshakeMLDSA(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handshake: %v", err)
 			}
-			if _, ok := cs.PeerCertificates[0].PublicKey.(*mldsa.PublicKey); !ok {
+			if _, ok := cs.PeerCertificates[0].PublicKey.(*mldsaPublicKey); !ok {
 				t.Errorf("server peer cert public key = %T, want *mldsa.PublicKey",
 					cs.PeerCertificates[0].PublicKey)
 			}
@@ -2247,7 +2246,7 @@ func TestHandshakeMLDSA(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handshake: %v", err)
 			}
-			if _, ok := ss.PeerCertificates[0].PublicKey.(*mldsa.PublicKey); !ok {
+			if _, ok := ss.PeerCertificates[0].PublicKey.(*mldsaPublicKey); !ok {
 				t.Errorf("client peer cert public key = %T, want *mldsa.PublicKey",
 					ss.PeerCertificates[0].PublicKey)
 			}
@@ -2269,11 +2268,11 @@ func TestHandshakeMLDSA(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handshake: %v", err)
 			}
-			if _, ok := cs.PeerCertificates[0].PublicKey.(*mldsa.PublicKey); !ok {
+			if _, ok := cs.PeerCertificates[0].PublicKey.(*mldsaPublicKey); !ok {
 				t.Errorf("client-side peer cert public key = %T, want *mldsa.PublicKey",
 					cs.PeerCertificates[0].PublicKey)
 			}
-			if _, ok := ss.PeerCertificates[0].PublicKey.(*mldsa.PublicKey); !ok {
+			if _, ok := ss.PeerCertificates[0].PublicKey.(*mldsaPublicKey); !ok {
 				t.Errorf("server-side peer cert public key = %T, want *mldsa.PublicKey",
 					ss.PeerCertificates[0].PublicKey)
 			}

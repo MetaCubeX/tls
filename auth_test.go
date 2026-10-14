@@ -8,8 +8,6 @@ import (
 	"crypto"
 	"strconv"
 	"testing"
-
-	"github.com/metacubex/mldsa"
 )
 
 func TestSignatureSelection(t *testing.T) {
@@ -159,7 +157,7 @@ func TestLegacyTypeAndHash(t *testing.T) {
 	// ML-DSA is not supported by TLS 1.0 and 1.1. Skip under FIPS 140-3 module
 	// v1.0.0 which doesn't support ML-DSA public keys.
 	if fips140Version() != "v1.0.0" {
-		for _, key := range []*mldsa.PrivateKey{
+		for _, key := range []*mldsaPrivateKey{
 			testMLDSA44Key, testMLDSA65Key, testMLDSA87Key,
 		} {
 			if _, _, err := legacyTypeAndHashFromPublicKey(key.PublicKey()); err == nil {
